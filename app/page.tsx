@@ -40,6 +40,7 @@ export default function Home() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [tripCount, setTripCount] = useState(0);
   const [driverTripCount, setDriverTripCount] = useState(0);
+  const [parkingCount, setParkingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -109,6 +110,19 @@ export default function Home() {
     setDriverTripCount(count ?? 0);
   }
 
+  async function loadParkingCount() {
+    const { count, error } = await supabase
+      .from("parking_records")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      setDatabaseError(`读取停车记录数量失败：${error.message}`);
+      return;
+    }
+
+    setParkingCount(count ?? 0);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -118,6 +132,7 @@ export default function Home() {
       loadVehicles(),
       loadTripCount(),
       loadDriverTripCount(),
+      loadParkingCount(),
     ]);
 
     setLoading(false);
@@ -281,8 +296,8 @@ export default function Home() {
 
                 <MenuCard
                   title="停车记录"
-                  value="0"
-                  onClick={() => alert("下一阶段制作停车地点登记")}
+                  value={`${parkingCount}`}
+                  onClick={() => (window.location.href = "/admin-parking")}
                 />
 
                 <MenuCard
@@ -314,7 +329,7 @@ export default function Home() {
                 <MenuCard
                   title="停车登记"
                   value="进入"
-                  onClick={() => alert("下一阶段制作GPS停车登记")}
+                  onClick={() => (window.location.href = "/parking")}
                 />
 
                 <MenuCard
