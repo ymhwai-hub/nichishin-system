@@ -45,3 +45,9 @@ app/page-backup.tsx
 app/page-before-*.tsx
 app/driver-trips/page-before-*.tsx
 app/test-supabase/
+
+# Local backup and test files
+app/page-backup.tsx
+app/page-before-*.tsx
+app/driver-trips/page-before-*.tsx
+app/test-supabase/
