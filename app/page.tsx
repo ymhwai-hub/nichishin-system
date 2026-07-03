@@ -429,7 +429,7 @@ export default function Home() {
                 <MenuCard
                   title="司机管理"
                   value={`${drivers.length} 人`}
-                  onClick={() => setView("drivers")}
+                  onClick={() => (window.location.href = "/drivers")}
                 />
 
                 <MenuCard
