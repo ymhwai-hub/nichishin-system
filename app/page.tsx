@@ -42,6 +42,7 @@ export default function Home() {
   const [driverTripCount, setDriverTripCount] = useState(0);
   const [parkingCount, setParkingCount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
+  const [reminderCount, setReminderCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -138,6 +139,138 @@ export default function Home() {
     setCashCount(count ?? 0);
   }
 
+  async function loadReminderCount() {
+    const [driverResult, vehicleResult] = await Promise.all([
+      supabase
+        .from("drivers")
+        .select(`
+          id,
+          license_expiry_date,
+          medical_check_date,
+          next_medical_check_date,
+          status
+        `)
+        .eq("status", "active"),
+
+      supabase
+        .from("vehicles")
+        .select(`
+          id,
+          insurance_expiry_date,
+          inspection_expiry_date,
+          last_maintenance_date,
+          next_maintenance_date,
+          status
+        `)
+        .neq("status", "inactive"),
+    ]);
+
+    if (driverResult.error) {
+      setDatabaseError(
+        `读取司机到期资料失败：${driverResult.error.message}`
+      );
+      return;
+    }
+
+    if (vehicleResult.error) {
+      setDatabaseError(
+        `读取车辆到期资料失败：${vehicleResult.error.message}`
+      );
+      return;
+    }
+
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const today = new Date(`${todayText}T00:00:00+09:00`);
+
+    const daysLeft = (dateText: string) => {
+      const due = new Date(`${dateText}T00:00:00+09:00`);
+
+      return Math.ceil(
+        (due.getTime() - today.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+    };
+
+    const addMonths = (dateText: string, months: number) => {
+      const [year, month, day] = dateText.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      date.setUTCMonth(date.getUTCMonth() + months);
+
+      return date.toISOString().slice(0, 10);
+    };
+
+    const addYears = (dateText: string, years: number) => {
+      const [year, month, day] = dateText.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      date.setUTCFullYear(date.getUTCFullYear() + years);
+
+      return date.toISOString().slice(0, 10);
+    };
+
+    let count = 0;
+
+    for (const driver of driverResult.data ?? []) {
+      if (
+        driver.license_expiry_date &&
+        daysLeft(driver.license_expiry_date) <= 30
+      ) {
+        count += 1;
+      }
+
+      const nextMedicalDate =
+        driver.next_medical_check_date ||
+        (driver.medical_check_date
+          ? addYears(driver.medical_check_date, 1)
+          : null);
+
+      if (
+        nextMedicalDate &&
+        daysLeft(nextMedicalDate) <= 60
+      ) {
+        count += 1;
+      }
+    }
+
+    for (const vehicle of vehicleResult.data ?? []) {
+      const nextMaintenanceDate =
+        vehicle.next_maintenance_date ||
+        (vehicle.last_maintenance_date
+          ? addMonths(vehicle.last_maintenance_date, 3)
+          : null);
+
+      if (
+        nextMaintenanceDate &&
+        daysLeft(nextMaintenanceDate) <= 15
+      ) {
+        count += 1;
+      }
+
+      if (
+        vehicle.inspection_expiry_date &&
+        daysLeft(vehicle.inspection_expiry_date) <= 30
+      ) {
+        count += 1;
+      }
+
+      if (
+        vehicle.insurance_expiry_date &&
+        daysLeft(vehicle.insurance_expiry_date) <= 30
+      ) {
+        count += 1;
+      }
+    }
+
+    setReminderCount(count);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -149,6 +282,7 @@ export default function Home() {
       loadDriverTripCount(),
       loadParkingCount(),
       loadCashCount(),
+      loadReminderCount(),
     ]);
 
     setLoading(false);
@@ -324,8 +458,8 @@ export default function Home() {
 
                 <MenuCard
                   title="到期提醒"
-                  value="0"
-                  onClick={() => alert("下一阶段制作自动提醒")}
+                  value={`${reminderCount}`}
+                  onClick={() => (window.location.href = "/reminders")}
                 />
               </div>
             ) : (
