@@ -41,6 +41,7 @@ export default function Home() {
   const [tripCount, setTripCount] = useState(0);
   const [driverTripCount, setDriverTripCount] = useState(0);
   const [parkingCount, setParkingCount] = useState(0);
+  const [cashCount, setCashCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -123,6 +124,20 @@ export default function Home() {
     setParkingCount(count ?? 0);
   }
 
+  async function loadCashCount() {
+    const { count, error } = await supabase
+      .from("expenses")
+      .select("*", { count: "exact", head: true })
+      .eq("expense_type", "cash_collection");
+
+    if (error) {
+      setDatabaseError(`读取代收现金数量失败：${error.message}`);
+      return;
+    }
+
+    setCashCount(count ?? 0);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -133,6 +148,7 @@ export default function Home() {
       loadTripCount(),
       loadDriverTripCount(),
       loadParkingCount(),
+      loadCashCount(),
     ]);
 
     setLoading(false);
@@ -302,8 +318,8 @@ export default function Home() {
 
                 <MenuCard
                   title="费用审核"
-                  value="0"
-                  onClick={() => alert("下一阶段制作费用管理")}
+                  value={`${cashCount}`}
+                  onClick={() => (window.location.href = "/admin-cash")}
                 />
 
                 <MenuCard
@@ -335,7 +351,7 @@ export default function Home() {
                 <MenuCard
                   title="代收现金"
                   value="¥0"
-                  onClick={() => alert("下一阶段制作代收现金")}
+                  onClick={() => (window.location.href = "/cash-collection")}
                 />
               </div>
             )}
