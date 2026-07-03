@@ -435,7 +435,7 @@ export default function Home() {
                 <MenuCard
                   title="车辆管理"
                   value={`${vehicles.length} 台`}
-                  onClick={() => setView("vehicles")}
+                  onClick={() => (window.location.href = "/vehicles")}
                 />
 
                 <MenuCard
@@ -473,7 +473,7 @@ export default function Home() {
                 <MenuCard
                   title="当前车辆"
                   value={vehicles[0]?.vehicle_code ?? "未分配"}
-                  onClick={() => setView("vehicles")}
+                  onClick={() => (window.location.href = "/vehicles")}
                 />
 
                 <MenuCard
