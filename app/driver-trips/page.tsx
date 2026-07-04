@@ -12,6 +12,8 @@ type Driver = {
 type Trip = {
   id: string;
   trip_number: string;
+  customer_id: string | null;
+  customer_name?: string | null;
   trip_type: string;
   trip_date: string;
   start_time: string | null;
@@ -62,6 +64,7 @@ export default function DriverTripsPage() {
         .select(`
           id,
           trip_number,
+          customer_id,
           trip_type,
           trip_date,
           start_time,
@@ -87,7 +90,47 @@ export default function DriverTripsPage() {
         return;
       }
 
-      setTrips((tripData as Trip[]) ?? []);
+      const rows = (tripData ?? []) as any[];
+
+      const customerIds = [
+        ...new Set(
+          rows
+            .map((row) => row.customer_id)
+            .filter(Boolean)
+        ),
+      ];
+
+      let customerMap: Record<string, string> = {};
+
+      if (customerIds.length > 0) {
+        const { data: customerData, error: customerError } =
+          await supabase
+            .from("customers")
+            .select("id, customer_name")
+            .in("id", customerIds);
+
+        if (customerError) {
+          setMessage(`读取客户姓名失败：${customerError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        customerMap = Object.fromEntries(
+          (customerData ?? []).map((customer) => [
+            customer.id,
+            customer.customer_name,
+          ])
+        );
+      }
+
+      setTrips(
+        rows.map((row) => ({
+          ...row,
+          customer_name: row.customer_id
+            ? customerMap[row.customer_id] ?? "客户资料不存在"
+            : null,
+        })) as Trip[]
+      );
       setLoading(false);
     }
 
@@ -247,6 +290,10 @@ export default function DriverTripsPage() {
                   <p className="mt-1">
                     车牌：
                     {trip.vehicles?.plate_number || "未填写"}
+                  </p>
+
+                  <p className="mt-1">
+                    客户：{trip.customer_name ?? "未关联客户"}
                   </p>
 
                   <p className="mt-1">

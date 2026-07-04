@@ -16,10 +16,17 @@ type Vehicle = {
   model: string;
 };
 
+type Customer = {
+  id: string;
+  customer_name: string;
+  customer_type: string;
+};
+
 type Trip = {
   id: string;
   trip_number: string;
   trip_type: string;
+  customer_id: string | null;
   trip_date: string;
   start_time: string | null;
   pickup_location: string | null;
@@ -27,6 +34,11 @@ type Trip = {
   passenger_count: number;
   luggage_count: number;
   status: string;
+  customers:
+    | {
+        customer_name: string;
+      }
+    | null;
   drivers:
     | {
         driver_code: string;
@@ -44,11 +56,13 @@ type Trip = {
 export default function TripsPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
 
   const [tripType, setTripType] = useState("airport_pickup");
   const [tripDate, setTripDate] = useState("");
   const [startTime, setStartTime] = useState("");
+  const [customerId, setCustomerId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
@@ -91,13 +105,28 @@ export default function TripsPage() {
     setVehicles(data ?? []);
   }
 
-  async function loadTrips() {
+  async function loadCustomers() {
     const { data, error } = await supabase
+      .from("customers")
+      .select("id, customer_name, customer_type")
+      .order("customer_name");
+
+    if (error) {
+      setMessage(`读取客户失败：${error.message}`);
+      return;
+    }
+
+    setCustomers((data as Customer[]) ?? []);
+  }
+
+  async function loadTrips() {
+    const { data: tripData, error: tripError } = await supabase
       .from("trips")
       .select(`
         id,
         trip_number,
         trip_type,
+        customer_id,
         trip_date,
         start_time,
         pickup_location,
@@ -117,12 +146,54 @@ export default function TripsPage() {
       .order("trip_date", { ascending: false })
       .order("start_time", { ascending: true });
 
-    if (error) {
-      setMessage(`读取行程失败：${error.message}`);
+    if (tripError) {
+      setMessage(`读取行程失败：${tripError.message}`);
       return;
     }
 
-    setTrips((data as Trip[]) ?? []);
+    const rows = (tripData ?? []) as any[];
+
+    const customerIds = [
+      ...new Set(
+        rows
+          .map((row) => row.customer_id)
+          .filter(Boolean)
+      ),
+    ];
+
+    let customerMap: Record<string, string> = {};
+
+    if (customerIds.length > 0) {
+      const { data: customerData, error: customerError } =
+        await supabase
+          .from("customers")
+          .select("id, customer_name")
+          .in("id", customerIds);
+
+      if (customerError) {
+        setMessage(`读取客户姓名失败：${customerError.message}`);
+        return;
+      }
+
+      customerMap = Object.fromEntries(
+        (customerData ?? []).map((customer) => [
+          customer.id,
+          customer.customer_name,
+        ])
+      );
+    }
+
+    const normalizedTrips = rows.map((row) => ({
+      ...row,
+      customers: row.customer_id
+        ? {
+            customer_name:
+              customerMap[row.customer_id] ?? "客户资料不存在",
+          }
+        : null,
+    }));
+
+    setTrips(normalizedTrips as Trip[]);
   }
 
   useEffect(() => {
@@ -132,6 +203,7 @@ export default function TripsPage() {
       await Promise.all([
         loadDrivers(),
         loadVehicles(),
+      loadCustomers(),
         loadTrips(),
       ]);
 
@@ -142,15 +214,18 @@ export default function TripsPage() {
   }, []);
 
   async function addTrip() {
-    if (
-      !tripDate ||
-      !startTime ||
-      !driverId ||
-      !vehicleId ||
-      !pickupLocation ||
-      !destination
-    ) {
-      setMessage("请填写日期、时间、司机、车辆、出发地和目的地");
+    const missingFields = [
+      !tripDate ? "日期" : "",
+      !startTime ? "时间" : "",
+      !customerId ? "客户" : "",
+      !driverId ? "司机" : "",
+      !vehicleId ? "车辆" : "",
+      !pickupLocation.trim() ? "出发地点" : "",
+      !destination.trim() ? "目的地" : "",
+    ].filter(Boolean);
+
+    if (missingFields.length > 0) {
+      setMessage(`还缺少：${missingFields.join("、")}`);
       return;
     }
 
@@ -165,6 +240,7 @@ export default function TripsPage() {
       trip_type: tripType,
       trip_date: tripDate,
       start_time: startDateTime,
+      customer_id: customerId,
       driver_id: driverId,
       vehicle_id: vehicleId,
       pickup_location: pickupLocation,
@@ -183,6 +259,7 @@ export default function TripsPage() {
     }
 
     setTripDate("");
+    setCustomerId("");
     setStartTime("");
     setDriverId("");
     setVehicleId("");
@@ -304,6 +381,31 @@ export default function TripsPage() {
                 placeholder="例如 MM722"
                 className="w-full rounded-xl border px-4 py-3"
               />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm text-gray-600">
+                关联客户
+              </label>
+
+              <select
+                value={customerId}
+                onChange={(event) =>
+                  setCustomerId(event.target.value)
+                }
+                className="w-full rounded-xl border px-4 py-3"
+              >
+                <option value="">请选择客户</option>
+
+                {customers.map((customer) => (
+                  <option
+                    key={customer.id}
+                    value={customer.id}
+                  >
+                    {customer.customer_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -471,6 +573,12 @@ export default function TripsPage() {
                   </p>
 
                   <div className="mt-4 border-t pt-3 text-sm text-gray-500">
+                    <p className="mt-1">
+                      客户：{customers.find(
+                        (customer) => customer.id === trip.customer_id
+                      )?.customer_name ?? "未关联客户"}
+                    </p>
+
                     <p>
                       司机：
                       {trip.drivers
