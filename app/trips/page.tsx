@@ -77,6 +77,36 @@ export default function TripsPage() {
   const [saving, setSaving] = useState(false);
   const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredTrips = trips.filter((trip) => {
+    const matchesStatus =
+      statusFilter === "all" || trip.status === statusFilter;
+
+    const customerName =
+      customers.find(
+        (customer) => customer.id === trip.customer_id
+      )?.customer_name ?? "";
+
+    const searchableText = [
+      trip.trip_number,
+      trip.flight_number ?? "",
+      customerName,
+      trip.pickup_location ?? "",
+      trip.destination ?? "",
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    const matchesSearch =
+      normalizedSearch === '' ||
+      searchableText.includes(normalizedSearch);
+
+    return matchesStatus && matchesSearch;
+  });
   const [message, setMessage] = useState("");
 
   async function loadDrivers() {
@@ -708,17 +738,53 @@ export default function TripsPage() {
             已保存行程
           </h2>
 
+          <div className="mt-3 rounded-2xl bg-white p-4 shadow">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-gray-700">
+                搜索行程
+              </span>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="搜索订单编号、客户姓名或航班号"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+              />
+            </label>
+
+            <label className="mt-3 block">
+              <span className="mb-1 block text-sm font-medium text-gray-700">
+                状态筛选
+              </span>
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+              >
+                <option value="all">全部状态</option>
+                <option value="scheduled">待执行</option>
+                <option value="in_progress">进行中</option>
+                <option value="completed">已完成</option>
+                <option value="cancelled">已取消</option>
+              </select>
+            </label>
+
+            <p className="mt-3 text-sm text-gray-500">
+              当前显示：{filteredTrips.length} 条，共 {trips.length} 条
+            </p>
+          </div>
+
           {loading ? (
             <div className="mt-3 rounded-2xl bg-white p-5 shadow">
               正在读取行程……
             </div>
-          ) : trips.length === 0 ? (
+          ) : filteredTrips.length === 0 ? (
             <div className="mt-3 rounded-2xl bg-white p-5 text-gray-500 shadow">
               暂无行程
             </div>
           ) : (
             <div className="mt-3 space-y-3">
-              {trips.map((trip) => (
+              {filteredTrips.map((trip) => (
                 <div
                   key={trip.id}
                   className="rounded-2xl bg-white p-5 shadow"
