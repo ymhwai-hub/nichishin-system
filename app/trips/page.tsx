@@ -254,6 +254,66 @@ export default function TripsPage() {
     initialize();
   }, []);
 
+  async function getScheduleConflictMessage(
+    startDateTime: string,
+    excludeTripId?: string
+  ): Promise<string | null> {
+    let query = supabase
+      .from("trips")
+      .select("id, trip_number, driver_id, vehicle_id, status")
+      .eq("start_time", startDateTime)
+      .neq("status", "cancelled");
+
+    if (excludeTripId) {
+      query = query.neq("id", excludeTripId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return `检查派单冲突失败：${error.message}`;
+    }
+
+    const existingTrips = data ?? [];
+
+    const driverConflict = existingTrips.find(
+      (trip) => trip.driver_id === driverId
+    );
+
+    const vehicleConflict = existingTrips.find(
+      (trip) => trip.vehicle_id === vehicleId
+    );
+
+    const conflictNumbers = [
+      driverConflict?.trip_number,
+      vehicleConflict?.trip_number,
+    ]
+      .filter(Boolean)
+      .filter(
+        (value, index, values) =>
+          values.indexOf(value) === index
+      )
+      .join("、");
+
+    const orderText = conflictNumbers
+      ? `（冲突订单：${conflictNumbers}）`
+      : "";
+
+    if (driverConflict && vehicleConflict) {
+      return `该司机和该车辆在这个时间已有其他行程${orderText}`;
+    }
+
+    if (driverConflict) {
+      return `该司机在这个时间已有其他行程${orderText}`;
+    }
+
+    if (vehicleConflict) {
+      return `该车辆在这个时间已经被分配${orderText}`;
+    }
+
+    return null;
+  }
+
   async function addTrip() {
     const missingFields = [
       !tripDate ? "日期" : "",
@@ -275,6 +335,16 @@ export default function TripsPage() {
 
     const tripNumber = `R${Date.now()}`;
     const startDateTime = `${tripDate}T${startTime}:00+09:00`;
+
+    const conflictMessage =
+      await getScheduleConflictMessage(startDateTime);
+
+    if (conflictMessage) {
+      setMessage(conflictMessage);
+      setSaving(false);
+      return;
+    }
+
 
     const { error } = await supabase.from("trips").insert({
       trip_number: tripNumber,
@@ -392,6 +462,19 @@ export default function TripsPage() {
 
     const startDateTime =
       `${tripDate}T${startTime}:00+09:00`;
+
+    const conflictMessage =
+      await getScheduleConflictMessage(
+        startDateTime,
+        editingTripId
+      );
+
+    if (conflictMessage) {
+      setMessage(conflictMessage);
+      setSaving(false);
+      return;
+    }
+
 
     const { error } = await supabase
       .from("trips")
@@ -717,6 +800,20 @@ export default function TripsPage() {
               {message}
             </p>
           )}
+
+          {message &&
+            (message.includes("已有其他行程") ||
+              message.includes("冲突订单") ||
+              message.includes("已经被分配")) && (
+              <div className="mb-4 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-4 shadow-md">
+                <p className="text-base font-extrabold text-red-800">
+                  ⚠️ 派单冲突
+                </p>
+                <p className="mt-2 break-words text-base font-bold leading-7 text-red-700">
+                  {message}
+                </p>
+              </div>
+            )}
 
           <button
             onClick={saveTrip}
