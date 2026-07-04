@@ -416,6 +416,32 @@ export default function TripsPage() {
     setUpdatingTripId(null);
   }
 
+  async function restoreTrip(tripId: string) {
+    const confirmed = window.confirm(
+      "确定恢复这个已取消的行程吗？"
+    );
+
+    if (!confirmed) return;
+
+    setUpdatingTripId(tripId);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("trips")
+      .update({ status: "scheduled" })
+      .eq("id", tripId);
+
+    if (error) {
+      setMessage(`恢复失败：${error.message}`);
+      setUpdatingTripId(null);
+      return;
+    }
+
+    setMessage("行程已恢复为待执行");
+    await loadTrips();
+    setUpdatingTripId(null);
+  }
+
   function tripTypeText(type: string) {
     if (type === "airport_pickup") return "机场接机";
     if (type === "airport_dropoff") return "机场送机";
@@ -752,6 +778,20 @@ export default function TripsPage() {
                     <p className="mt-1 text-xs text-gray-400">
                       订单编号：{trip.trip_number}
                     </p>
+
+                    {trip.status === "cancelled" && (
+                      <button
+                        type="button"
+                        onClick={() => restoreTrip(trip.id)}
+                        disabled={updatingTripId === trip.id}
+                        className="mt-4 w-full rounded-xl bg-green-100 px-4 py-3 font-semibold text-green-700 disabled:opacity-50"
+                      >
+                        {updatingTripId === trip.id
+                          ? "正在恢复..."
+                          : "恢复这个行程"}
+                      </button>
+                    )}
+
 
                     {trip.status !== "completed" &&
                       trip.status !== "cancelled" && (
