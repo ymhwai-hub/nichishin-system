@@ -65,6 +65,7 @@ export default function Home() {
   const [parkingCount, setParkingCount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
+  const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -293,6 +294,19 @@ export default function Home() {
     setReminderCount(count);
   }
 
+  async function loadCustomerCount() {
+    const { count, error } = await supabase
+      .from("customers")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      setDatabaseError(`读取客户数量失败：${error.message}`);
+      return;
+    }
+
+    setCustomerCount(count ?? 0);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -305,6 +319,7 @@ export default function Home() {
       loadParkingCount(),
       loadCashCount(),
       loadReminderCount(),
+      loadCustomerCount(),
     ]);
 
     setLoading(false);
@@ -498,6 +513,12 @@ export default function Home() {
                   title="到期提醒"
                   value={`${reminderCount}`}
                   onClick={() => (window.location.href = "/reminders")}
+                />
+
+                <MenuCard
+                  title="客户管理"
+                  value={`${customerCount} 人`}
+                  onClick={() => (window.location.href = "/customers")}
                 />
               </div>
             ) : (
