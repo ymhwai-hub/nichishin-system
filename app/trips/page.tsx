@@ -27,6 +27,8 @@ type Trip = {
   trip_number: string;
   trip_type: string;
   customer_id: string | null;
+  driver_id: string | null;
+  vehicle_id: string | null;
   trip_date: string;
   start_time: string | null;
   pickup_location: string | null;
@@ -73,6 +75,8 @@ export default function TripsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
+  const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   async function loadDrivers() {
@@ -126,7 +130,10 @@ export default function TripsPage() {
         id,
         trip_number,
         trip_type,
+        flight_number,
         customer_id,
+        driver_id,
+        vehicle_id,
         trip_date,
         start_time,
         pickup_location,
@@ -275,6 +282,140 @@ export default function TripsPage() {
     await loadTrips();
   }
 
+  function clearTripForm() {
+    setTripDate("");
+    setCustomerId("");
+    setStartTime("");
+    setDriverId("");
+    setVehicleId("");
+    setPickupLocation("");
+    setDestination("");
+    setFlightNumber("");
+    setPassengerCount("1");
+    setLuggageCount("0");
+  }
+
+  function startEditTrip(trip: Trip) {
+    const editTime = new Date(trip.start_time).toLocaleTimeString(
+      "en-GB",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Tokyo",
+      }
+    );
+
+    setEditingTripId(trip.id);
+    setTripType(trip.trip_type);
+    setTripDate(trip.trip_date);
+    setStartTime(editTime);
+    setCustomerId(trip.customer_id ?? "");
+    setDriverId(trip.driver_id ?? "");
+    setVehicleId(trip.vehicle_id ?? "");
+    setPickupLocation(trip.pickup_location ?? "");
+    setDestination(trip.destination ?? "");
+    setFlightNumber(trip.flight_number ?? "");
+    setPassengerCount(String(trip.passenger_count ?? 1));
+    setLuggageCount(String(trip.luggage_count ?? 0));
+    setMessage(`正在编辑订单：${trip.trip_number}`);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function cancelEditing() {
+    setEditingTripId(null);
+    clearTripForm();
+    setMessage("已取消编辑");
+  }
+
+  async function saveTrip() {
+    if (!editingTripId) {
+      await addTrip();
+      return;
+    }
+
+    const missingFields = [
+      !tripDate ? "日期" : "",
+      !startTime ? "时间" : "",
+      !customerId ? "客户" : "",
+      !driverId ? "司机" : "",
+      !vehicleId ? "车辆" : "",
+      !pickupLocation.trim() ? "出发地点" : "",
+      !destination.trim() ? "目的地" : "",
+    ].filter(Boolean);
+
+    if (missingFields.length > 0) {
+      setMessage(`还缺少：${missingFields.join("、")}`);
+      return;
+    }
+
+    setSaving(true);
+    setMessage("");
+
+    const startDateTime =
+      `${tripDate}T${startTime}:00+09:00`;
+
+    const { error } = await supabase
+      .from("trips")
+      .update({
+        trip_type: tripType,
+        customer_id: customerId,
+        driver_id: driverId,
+        vehicle_id: vehicleId,
+        trip_date: tripDate,
+        start_time: startDateTime,
+        pickup_location: pickupLocation,
+        destination,
+        flight_number: flightNumber || null,
+        passenger_count: Number(passengerCount || 1),
+        luggage_count: Number(luggageCount || 0),
+        signature_required: tripType === "charter",
+      })
+      .eq("id", editingTripId);
+
+    if (error) {
+      setMessage(`修改失败：${error.message}`);
+      setSaving(false);
+      return;
+    }
+
+    setEditingTripId(null);
+    clearTripForm();
+    setMessage("行程资料已成功修改");
+    setSaving(false);
+    await loadTrips();
+  }
+
+  async function cancelTrip(tripId: string) {
+    const confirmed = window.confirm(
+      "确定取消这个行程吗？取消后记录仍会保留。"
+    );
+
+    if (!confirmed) return;
+
+    setUpdatingTripId(tripId);
+    setMessage("");
+
+    const { error } = await supabase
+      .from("trips")
+      .update({ status: "cancelled" })
+      .eq("id", tripId);
+
+    if (error) {
+      setMessage(`取消失败：${error.message}`);
+      setUpdatingTripId(null);
+      return;
+    }
+
+    setMessage("行程已取消，记录仍然保留");
+    await loadTrips();
+    setUpdatingTripId(null);
+  }
+
   function tripTypeText(type: string) {
     if (type === "airport_pickup") return "机场接机";
     if (type === "airport_dropoff") return "机场送机";
@@ -322,7 +463,7 @@ export default function TripsPage() {
 
         <div className="mt-5 rounded-3xl bg-white p-6 shadow">
           <h2 className="text-lg font-bold text-gray-900">
-            新增行程
+            {editingTripId ? "编辑行程" : "新增行程"}
           </h2>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -518,12 +659,22 @@ export default function TripsPage() {
           )}
 
           <button
-            onClick={addTrip}
+            onClick={saveTrip}
             disabled={saving}
             className="mt-5 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white disabled:opacity-50"
           >
             {saving ? "正在保存……" : "保存行程"}
           </button>
+
+            {editingTripId && (
+              <button
+                type="button"
+                onClick={cancelEditing}
+                className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-semibold text-gray-700"
+              >
+                取消编辑
+              </button>
+            )}
         </div>
 
         <div className="mt-6">
@@ -601,6 +752,33 @@ export default function TripsPage() {
                     <p className="mt-1 text-xs text-gray-400">
                       订单编号：{trip.trip_number}
                     </p>
+
+                    {trip.status !== "completed" &&
+                      trip.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => startEditTrip(trip)}
+                          className="mt-4 w-full rounded-xl bg-blue-100 px-4 py-3 font-semibold text-blue-700"
+                        >
+                          编辑这个行程
+                        </button>
+                      )}
+
+
+                    {trip.status !== "completed" &&
+                      trip.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => cancelTrip(trip.id)}
+                          disabled={updatingTripId === trip.id}
+                          className="mt-4 w-full rounded-xl bg-red-100 px-4 py-3 font-semibold text-red-700 disabled:opacity-50"
+                        >
+                          {updatingTripId === trip.id
+                            ? "正在取消..."
+                            : "取消这个行程"}
+                        </button>
+                      )}
+
                   </div>
                 </div>
               ))}
