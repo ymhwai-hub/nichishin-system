@@ -79,6 +79,7 @@ export default function TripsPage() {
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -105,7 +106,10 @@ export default function TripsPage() {
       normalizedSearch === '' ||
       searchableText.includes(normalizedSearch);
 
-    return matchesStatus && matchesSearch;
+    const matchesDate =
+      dateFilter === "" || trip.trip_date === dateFilter;
+
+    return matchesStatus && matchesSearch && matchesDate;
   });
   const [message, setMessage] = useState("");
 
@@ -769,7 +773,46 @@ export default function TripsPage() {
               </select>
             </label>
 
-            <p className="mt-3 text-sm text-gray-500">
+                        <label className="mt-3 block">
+              <span className="mb-1 block text-sm font-medium text-gray-700">
+                行程日期
+              </span>
+              <select
+                value={dateFilter}
+                onChange={(event) => setDateFilter(event.target.value)}
+                aria-label="选择行程日期"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+              >
+                <option value="">全部日期</option>
+                {Array.from(
+                  new Set(trips.map((trip) => trip.trip_date))
+                )
+                  .sort((a, b) => b.localeCompare(a))
+                  .map((date) => (
+                    <option key={date} value={date}>
+                      {date}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            {(searchTerm ||
+              statusFilter !== "all" ||
+              dateFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                  setDateFilter("");
+                }}
+                className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-semibold text-gray-700"
+              >
+                清除全部筛选
+              </button>
+            )}
+
+<p className="mt-3 text-sm text-gray-500">
               当前显示：{filteredTrips.length} 条，共 {trips.length} 条
             </p>
           </div>
