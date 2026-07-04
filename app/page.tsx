@@ -36,6 +36,28 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
+  useEffect(() => {
+    const savedLogin = window.localStorage.getItem("nichishin_login");
+
+    if (!savedLogin) return;
+
+    try {
+      const saved = JSON.parse(savedLogin);
+
+      if (saved.role === "admin" || saved.role === "driver") {
+        setRole(saved.role);
+        setUsername(
+          saved.username ||
+            (saved.role === "admin" ? "admin" : "D001")
+        );
+        setLoggedIn(true);
+        setView("home");
+      }
+    } catch {
+      window.localStorage.removeItem("nichishin_login");
+    }
+  }, []);
+
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [tripCount, setTripCount] = useState(0);
@@ -298,6 +320,13 @@ export default function Home() {
       setLoggedIn(true);
       setView("home");
       setLoginError("");
+      window.localStorage.setItem(
+        "nichishin_login",
+        JSON.stringify({
+          role: "admin",
+          username: "admin",
+        })
+      );
       return;
     }
 
@@ -306,6 +335,13 @@ export default function Home() {
       setLoggedIn(true);
       setView("home");
       setLoginError("");
+      window.localStorage.setItem(
+        "nichishin_login",
+        JSON.stringify({
+          role: "driver",
+          username: "D001",
+        })
+      );
       return;
     }
 
@@ -313,7 +349,9 @@ export default function Home() {
   }
 
   function logout() {
+    window.localStorage.removeItem("nichishin_login");
     setLoggedIn(false);
+    setUsername("");
     setPassword("");
     setView("home");
   }
