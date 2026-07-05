@@ -31,6 +31,7 @@ type Trip = {
   vehicle_id: string | null;
   trip_date: string;
   start_time: string | null;
+  end_time: string | null;
   pickup_location: string | null;
   destination: string | null;
   passenger_count: number;
@@ -64,6 +65,7 @@ export default function TripsPage() {
   const [tripType, setTripType] = useState("airport_pickup");
   const [tripDate, setTripDate] = useState("");
   const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
@@ -170,6 +172,7 @@ export default function TripsPage() {
         vehicle_id,
         trip_date,
         start_time,
+        end_time,
         pickup_location,
         destination,
         passenger_count,
@@ -254,14 +257,25 @@ export default function TripsPage() {
     initialize();
   }, []);
 
+  function nextDateString(date: string) {
+    const [year, month, day] = date.split("-").map(Number);
+    const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
+    return nextDate.toISOString().slice(0, 10);
+  }
+
   async function getScheduleConflictMessage(
     startDateTime: string,
+    endDateTime: string,
     excludeTripId?: string
-  ): Promise<string | null> {
+  ): Promise<{
+    message: string;
+    allowSave: boolean;
+  } | null> {
     let query = supabase
       .from("trips")
-      .select("id, trip_number, driver_id, vehicle_id, status")
-      .eq("start_time", startDateTime)
+      .select(
+        "id, trip_number, trip_type, driver_id, vehicle_id, start_time, end_time, status"
+      )
       .neq("status", "cancelled");
 
     if (excludeTripId) {
@@ -271,18 +285,40 @@ export default function TripsPage() {
     const { data, error } = await query;
 
     if (error) {
-      return `检查派单冲突失败：${error.message}`;
+      return {
+        message: `检查派单冲突失败：${error.message}`,
+        allowSave: false,
+      };
     }
 
-    const existingTrips = data ?? [];
+    const newStart = new Date(startDateTime).getTime();
+    const newEnd = new Date(endDateTime).getTime();
 
-    const driverConflict = existingTrips.find(
+    const overlappingTrips = (data ?? []).filter((trip) => {
+      if (!trip.start_time) return false;
+
+      const existingStart = new Date(trip.start_time).getTime();
+
+      if (!trip.end_time) {
+        return existingStart === newStart;
+      }
+
+      const existingEnd = new Date(trip.end_time).getTime();
+
+      return existingStart < newEnd && existingEnd > newStart;
+    });
+
+    const driverConflict = overlappingTrips.find(
       (trip) => trip.driver_id === driverId
     );
 
-    const vehicleConflict = existingTrips.find(
+    const vehicleConflict = overlappingTrips.find(
       (trip) => trip.vehicle_id === vehicleId
     );
+
+    if (!driverConflict && !vehicleConflict) {
+      return null;
+    }
 
     const conflictNumbers = [
       driverConflict?.trip_number,
@@ -299,25 +335,49 @@ export default function TripsPage() {
       ? `（冲突订单：${conflictNumbers}）`
       : "";
 
+    let message = "";
+
     if (driverConflict && vehicleConflict) {
-      return `该司机和该车辆在这个时间已有其他行程${orderText}`;
+      message =
+        `该司机和该车辆在这个时间段已有其他行程${orderText}`;
+    } else if (driverConflict) {
+      message =
+        `该司机在这个时间段已有其他行程${orderText}`;
+    } else {
+      message =
+        `该车辆在这个时间段已经被分配${orderText}`;
     }
 
-    if (driverConflict) {
-      return `该司机在这个时间已有其他行程${orderText}`;
-    }
+    const currentIsAirportTransfer =
+      tripType === "airport_pickup" ||
+      tripType === "airport_dropoff";
 
-    if (vehicleConflict) {
-      return `该车辆在这个时间已经被分配${orderText}`;
-    }
+    const relevantConflictTrips = overlappingTrips.filter(
+      (trip) =>
+        trip.id === driverConflict?.id ||
+        trip.id === vehicleConflict?.id
+    );
 
-    return null;
+    const allConflictsAreAirportTransfers =
+      relevantConflictTrips.every(
+        (trip) =>
+          trip.trip_type === "airport_pickup" ||
+          trip.trip_type === "airport_dropoff"
+      );
+
+    return {
+      message,
+      allowSave:
+        currentIsAirportTransfer &&
+        allConflictsAreAirportTransfers,
+    };
   }
 
   async function addTrip() {
     const missingFields = [
       !tripDate ? "日期" : "",
       !startTime ? "时间" : "",
+      !endTime ? "结束时间" : "",
       !customerId ? "客户" : "",
       !driverId ? "司机" : "",
       !vehicleId ? "车辆" : "",
@@ -336,11 +396,30 @@ export default function TripsPage() {
     const tripNumber = `R${Date.now()}`;
     const startDateTime = `${tripDate}T${startTime}:00+09:00`;
 
-    const conflictMessage =
+    if (endTime === startTime) {
+      setMessage("结束时间不能和出发时间相同");
+      setSaving(false);
+      return;
+    }
+
+    const endDate =
+      endTime > startTime
+        ? tripDate
+        : nextDateString(tripDate);
+
+    const endDateTime =
+      `${endDate}T${endTime}:00+09:00`;
+
+    const scheduleConflict =
       await getScheduleConflictMessage(startDateTime);
 
-    if (conflictMessage) {
-      setMessage(conflictMessage);
+    const conflictWarning =
+      scheduleConflict?.allowSave
+        ? scheduleConflict.message
+        : "";
+
+    if (scheduleConflict && !scheduleConflict.allowSave) {
+      setMessage(scheduleConflict.message);
       setSaving(false);
       return;
     }
@@ -351,6 +430,7 @@ export default function TripsPage() {
       trip_type: tripType,
       trip_date: tripDate,
       start_time: startDateTime,
+        end_time: endDateTime,
       customer_id: customerId,
       driver_id: driverId,
       vehicle_id: vehicleId,
@@ -380,7 +460,11 @@ export default function TripsPage() {
     setPassengerCount("1");
     setLuggageCount("0");
 
-    setMessage("行程已成功保存到数据库");
+    setMessage(
+      conflictWarning
+        ? `⚠️ ${conflictWarning}；接送机行程已保存，请再次确认实际调度。`
+        : "行程已成功保存到数据库"
+    );
     setSaving(false);
 
     await loadTrips();
@@ -390,6 +474,7 @@ export default function TripsPage() {
     setTripDate("");
     setCustomerId("");
     setStartTime("");
+    setEndTime("");
     setDriverId("");
     setVehicleId("");
     setPickupLocation("");
@@ -410,10 +495,20 @@ export default function TripsPage() {
       }
     );
 
+    const editEndTime = trip.end_time
+      ? new Date(trip.end_time).toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+          timeZone: "Asia/Tokyo",
+        })
+      : "";
+
     setEditingTripId(trip.id);
     setTripType(trip.trip_type);
     setTripDate(trip.trip_date);
     setStartTime(editTime);
+    setEndTime(editEndTime);
     setCustomerId(trip.customer_id ?? "");
     setDriverId(trip.driver_id ?? "");
     setVehicleId(trip.vehicle_id ?? "");
@@ -445,6 +540,7 @@ export default function TripsPage() {
     const missingFields = [
       !tripDate ? "日期" : "",
       !startTime ? "时间" : "",
+      !endTime ? "结束时间" : "",
       !customerId ? "客户" : "",
       !driverId ? "司机" : "",
       !vehicleId ? "车辆" : "",
@@ -463,14 +559,33 @@ export default function TripsPage() {
     const startDateTime =
       `${tripDate}T${startTime}:00+09:00`;
 
-    const conflictMessage =
+    if (endTime === startTime) {
+      setMessage("结束时间不能和出发时间相同");
+      setSaving(false);
+      return;
+    }
+
+    const endDate =
+      endTime > startTime
+        ? tripDate
+        : nextDateString(tripDate);
+
+    const endDateTime =
+      `${endDate}T${endTime}:00+09:00`;
+
+    const scheduleConflict =
       await getScheduleConflictMessage(
         startDateTime,
         editingTripId
       );
 
-    if (conflictMessage) {
-      setMessage(conflictMessage);
+    const conflictWarning =
+      scheduleConflict?.allowSave
+        ? scheduleConflict.message
+        : "";
+
+    if (scheduleConflict && !scheduleConflict.allowSave) {
+      setMessage(scheduleConflict.message);
       setSaving(false);
       return;
     }
@@ -485,6 +600,7 @@ export default function TripsPage() {
         vehicle_id: vehicleId,
         trip_date: tripDate,
         start_time: startDateTime,
+        end_time: endDateTime,
         pickup_location: pickupLocation,
         destination,
         flight_number: flightNumber || null,
@@ -502,7 +618,11 @@ export default function TripsPage() {
 
     setEditingTripId(null);
     clearTripForm();
-    setMessage("行程资料已成功修改");
+    setMessage(
+      conflictWarning
+        ? `⚠️ ${conflictWarning}；接送机行程已保存，请再次确认实际调度。`
+        : "行程资料已成功修改"
+    );
     setSaving(false);
     await loadTrips();
   }
@@ -651,6 +771,19 @@ export default function TripsPage() {
                 className="w-full rounded-xl border px-4 py-3"
               />
             </div>
+
+              <div>
+                <label className="mb-1 block text-sm text-gray-600">
+                  结束时间
+                </label>
+
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(event) => setEndTime(event.target.value)}
+                  className="w-full rounded-xl border px-4 py-3"
+                />
+              </div>
 
             <div>
               <label className="mb-1 block text-sm text-gray-600">
@@ -933,6 +1066,9 @@ export default function TripsPage() {
                     <div>
                       <p className="font-bold text-gray-900">
                         {trip.trip_date} · {formatTime(trip.start_time)}
+                    {trip.end_time
+                      ? `—${formatTime(trip.end_time)}`
+                      : ""}
                       </p>
 
                       <p className="mt-1 text-sm text-emerald-600">
