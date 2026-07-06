@@ -263,6 +263,94 @@ export default function TripsPage() {
     return nextDate.toISOString().slice(0, 10);
   }
 
+  async function getAirportTransferOverlapWarning(
+    startDateTime: string,
+    endDateTime: string,
+    excludeTripId?: string
+  ): Promise<string> {
+    const currentIsAirportTransfer =
+      tripType === "airport_pickup" ||
+      tripType === "airport_dropoff";
+
+    if (!currentIsAirportTransfer) {
+      return "";
+    }
+
+    let query = supabase
+      .from("trips")
+      .select(
+        "id, trip_number, trip_type, driver_id, vehicle_id, start_time, end_time, status"
+      )
+      .neq("status", "cancelled");
+
+    if (excludeTripId) {
+      query = query.neq("id", excludeTripId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return `检查接送机时间提醒失败：${error.message}`;
+    }
+
+    const newStart = new Date(startDateTime).getTime();
+    const newEnd = new Date(endDateTime).getTime();
+
+    const airportTransferTrips = (data ?? []).filter(
+      (trip) =>
+        trip.trip_type === "airport_pickup" ||
+        trip.trip_type === "airport_dropoff"
+    );
+
+    const overlappingTrips = airportTransferTrips.filter((trip) => {
+      if (!trip.start_time) return false;
+
+      const existingStart = new Date(trip.start_time).getTime();
+      const existingEnd = trip.end_time
+        ? new Date(trip.end_time).getTime()
+        : existingStart + 2 * 60 * 60 * 1000;
+
+      return existingStart < newEnd && existingEnd > newStart;
+    });
+
+    const driverConflict = overlappingTrips.find(
+      (trip) => trip.driver_id === driverId
+    );
+
+    const vehicleConflict = overlappingTrips.find(
+      (trip) => trip.vehicle_id === vehicleId
+    );
+
+    if (!driverConflict && !vehicleConflict) {
+      return "";
+    }
+
+    const conflictNumbers = [
+      driverConflict?.trip_number,
+      vehicleConflict?.trip_number,
+    ]
+      .filter(Boolean)
+      .filter(
+        (value, index, values) =>
+          values.indexOf(value) === index
+      )
+      .join("、");
+
+    const orderText = conflictNumbers
+      ? `（冲突订单：${conflictNumbers}）`
+      : "";
+
+    if (driverConflict && vehicleConflict) {
+      return `该司机和该车辆在这个时间段已有其他接送机行程${orderText}`;
+    }
+
+    if (driverConflict) {
+      return `该司机在这个时间段已有其他接送机行程${orderText}`;
+    }
+
+    return `该车辆在这个时间段已经有其他接送机行程${orderText}`;
+  }
+
   async function getScheduleConflictMessage(
     startDateTime: string,
     endDateTime: string,
@@ -299,11 +387,9 @@ export default function TripsPage() {
 
       const existingStart = new Date(trip.start_time).getTime();
 
-      if (!trip.end_time) {
-        return existingStart === newStart;
-      }
-
-      const existingEnd = new Date(trip.end_time).getTime();
+      const existingEnd = trip.end_time
+        ? new Date(trip.end_time).getTime()
+        : existingStart + 2 * 60 * 60 * 1000;
 
       return existingStart < newEnd && existingEnd > newStart;
     });
@@ -425,7 +511,13 @@ export default function TripsPage() {
     }
 
 
-    const { error } = await supabase.from("trips").insert({
+        const airportTransferWarning =
+      await getAirportTransferOverlapWarning(
+        startDateTime,
+        endDateTime
+      );
+
+const { error } = await supabase.from("trips").insert({
       trip_number: tripNumber,
       trip_type: tripType,
       trip_date: tripDate,
@@ -461,8 +553,8 @@ export default function TripsPage() {
     setLuggageCount("0");
 
     setMessage(
-      conflictWarning
-        ? `⚠️ ${conflictWarning}；接送机行程已保存，请再次确认实际调度。`
+      airportTransferWarning
+        ? `⚠️ ${airportTransferWarning}；接送机行程已保存，请再次确认实际调度。`
         : "行程已成功保存到数据库"
     );
     setSaving(false);
@@ -591,7 +683,14 @@ export default function TripsPage() {
     }
 
 
-    const { error } = await supabase
+        const airportTransferWarning =
+      await getAirportTransferOverlapWarning(
+        startDateTime,
+        endDateTime,
+        editingTripId
+      );
+
+const { error } = await supabase
       .from("trips")
       .update({
         trip_type: tripType,
@@ -619,8 +718,8 @@ export default function TripsPage() {
     setEditingTripId(null);
     clearTripForm();
     setMessage(
-      conflictWarning
-        ? `⚠️ ${conflictWarning}；接送机行程已保存，请再次确认实际调度。`
+      airportTransferWarning
+        ? `⚠️ ${airportTransferWarning}；接送机行程已保存，请再次确认实际调度。`
         : "行程资料已成功修改"
     );
     setSaving(false);
@@ -731,14 +830,14 @@ export default function TripsPage() {
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 行程类型
               </label>
 
               <select
                 value={tripType}
                 onChange={(event) => setTripType(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               >
                 <option value="airport_pickup">机场接机</option>
                 <option value="airport_dropoff">机场送机</option>
@@ -747,7 +846,7 @@ export default function TripsPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 行程日期
               </label>
 
@@ -755,12 +854,12 @@ export default function TripsPage() {
                 type="date"
                 value={tripDate}
                 onChange={(event) => setTripDate(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 出发时间
               </label>
 
@@ -768,12 +867,12 @@ export default function TripsPage() {
                 type="time"
                 value={startTime}
                 onChange={(event) => setStartTime(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
               <div>
-                <label className="mb-1 block text-sm text-gray-600">
+                <label className="mb-1 block text-sm text-gray-800">
                   结束时间
                 </label>
 
@@ -781,12 +880,12 @@ export default function TripsPage() {
                   type="time"
                   value={endTime}
                   onChange={(event) => setEndTime(event.target.value)}
-                  className="w-full rounded-xl border px-4 py-3"
+                  className="w-full rounded-xl border px-4 py-3 text-gray-900"
                 />
               </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 航班号
               </label>
 
@@ -796,12 +895,12 @@ export default function TripsPage() {
                   setFlightNumber(event.target.value.toUpperCase())
                 }
                 placeholder="例如 MM722"
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 关联客户
               </label>
 
@@ -810,7 +909,7 @@ export default function TripsPage() {
                 onChange={(event) =>
                   setCustomerId(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               >
                 <option value="">请选择客户</option>
 
@@ -826,14 +925,14 @@ export default function TripsPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 分配司机
               </label>
 
               <select
                 value={driverId}
                 onChange={(event) => setDriverId(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               >
                 <option value="">请选择司机</option>
 
@@ -846,14 +945,14 @@ export default function TripsPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 分配车辆
               </label>
 
               <select
                 value={vehicleId}
                 onChange={(event) => setVehicleId(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               >
                 <option value="">请选择车辆</option>
 
@@ -866,7 +965,7 @@ export default function TripsPage() {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 出发地点
               </label>
 
@@ -876,12 +975,12 @@ export default function TripsPage() {
                   setPickupLocation(event.target.value)
                 }
                 placeholder="例如：中部国际机场 T1"
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 目的地
               </label>
 
@@ -891,12 +990,12 @@ export default function TripsPage() {
                   setDestination(event.target.value)
                 }
                 placeholder="例如：名古屋万豪酒店"
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 乘客人数
               </label>
 
@@ -907,12 +1006,12 @@ export default function TripsPage() {
                 onChange={(event) =>
                   setPassengerCount(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-600">
+              <label className="mb-1 block text-sm text-gray-800">
                 行李数量
               </label>
 
@@ -923,13 +1022,13 @@ export default function TripsPage() {
                 onChange={(event) =>
                   setLuggageCount(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3"
+                className="w-full rounded-xl border px-4 py-3 text-gray-900"
               />
             </div>
           </div>
 
           {message && (
-            <p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+            <p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">
               {message}
             </p>
           )}
@@ -982,7 +1081,7 @@ export default function TripsPage() {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="搜索订单编号、客户姓名或航班号"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
               />
             </label>
 
@@ -993,7 +1092,7 @@ export default function TripsPage() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
               >
                 <option value="all">全部状态</option>
                 <option value="scheduled">待执行</option>
@@ -1011,7 +1110,7 @@ export default function TripsPage() {
                 value={dateFilter}
                 onChange={(event) => setDateFilter(event.target.value)}
                 aria-label="选择行程日期"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
               >
                 <option value="">全部日期</option>
                 {Array.from(
@@ -1042,7 +1141,7 @@ export default function TripsPage() {
               </button>
             )}
 
-<p className="mt-3 text-sm text-gray-500">
+<p className="mt-3 text-sm text-gray-700">
               当前显示：{filteredTrips.length} 条，共 {trips.length} 条
             </p>
           </div>
@@ -1052,7 +1151,7 @@ export default function TripsPage() {
               正在读取行程……
             </div>
           ) : filteredTrips.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-white p-5 text-gray-500 shadow">
+            <div className="mt-3 rounded-2xl bg-white p-5 text-gray-700 shadow">
               暂无行程
             </div>
           ) : (
@@ -1085,13 +1184,13 @@ export default function TripsPage() {
                     {trip.pickup_location || "未填写"}
                   </p>
 
-                  <p className="my-1 text-sm text-gray-400">↓</p>
+                  <p className="my-1 text-sm text-gray-800">↓</p>
 
                   <p className="font-medium text-gray-900">
                     {trip.destination || "未填写"}
                   </p>
 
-                  <div className="mt-4 border-t pt-3 text-sm text-gray-500">
+                  <div className="mt-4 border-t pt-3 text-sm text-gray-700">
                     <p className="mt-1">
                       客户：{customers.find(
                         (customer) => customer.id === trip.customer_id
@@ -1117,7 +1216,7 @@ export default function TripsPage() {
                       {trip.luggage_count}件
                     </p>
 
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-xs text-gray-800">
                       订单编号：{trip.trip_number}
                     </p>
 
