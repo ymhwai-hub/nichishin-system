@@ -198,6 +198,67 @@ export default function DriverTripsPage() {
     });
   }
 
+  function getTripOverlapWarning(currentTrip: Trip) {
+    if (
+      currentTrip.status === "cancelled" ||
+      currentTrip.status === "completed" ||
+      !currentTrip.start_time
+    ) {
+      return "";
+    }
+
+    const currentIsAirportTransfer =
+      currentTrip.trip_type === "airport_pickup" ||
+      currentTrip.trip_type === "airport_dropoff";
+
+    if (!currentIsAirportTransfer) {
+      return "";
+    }
+
+    const currentStart = new Date(currentTrip.start_time).getTime();
+    const currentEnd = currentTrip.end_time
+      ? new Date(currentTrip.end_time).getTime()
+      : currentStart + 2 * 60 * 60 * 1000;
+
+    const conflictTrips = trips.filter((trip) => {
+      if (
+        trip.id === currentTrip.id ||
+        trip.status === "cancelled" ||
+        trip.status === "completed" ||
+        !trip.start_time
+      ) {
+        return false;
+      }
+
+      const isAirportTransfer =
+        trip.trip_type === "airport_pickup" ||
+        trip.trip_type === "airport_dropoff";
+
+      if (!isAirportTransfer) {
+        return false;
+      }
+
+      const tripStart = new Date(trip.start_time).getTime();
+      const tripEnd = trip.end_time
+        ? new Date(trip.end_time).getTime()
+        : tripStart + 2 * 60 * 60 * 1000;
+
+      return tripStart < currentEnd && tripEnd > currentStart;
+    });
+
+    if (conflictTrips.length === 0) {
+      return "";
+    }
+
+    const conflictNumbers = conflictTrips
+      .map((trip) => trip.trip_number)
+      .filter(Boolean)
+      .join("、");
+
+    return `这条行程与订单 ${conflictNumbers} 时间重叠，请和办公室发单人员确认实际调度。`;
+  }
+
+
   return (
     <main className="min-h-screen bg-emerald-50 p-5">
       <div className="mx-auto max-w-md">
@@ -309,6 +370,15 @@ export default function DriverTripsPage() {
                   <p className="mt-2 text-xs text-gray-400">
                     订单编号：{trip.trip_number}
                   </p>
+
+                  {getTripOverlapWarning(trip) && (
+                    <div className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                      <p>⚠️ 时间重叠提醒</p>
+                      <p className="mt-1 leading-6">
+                        {getTripOverlapWarning(trip)}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {trip.status === "scheduled" && (
