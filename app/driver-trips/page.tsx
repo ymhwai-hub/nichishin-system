@@ -17,6 +17,7 @@ type Trip = {
   trip_type: string;
   trip_date: string;
   start_time: string | null;
+  end_time: string | null;
   pickup_location: string | null;
   destination: string | null;
   flight_number: string | null;
@@ -68,6 +69,7 @@ export default function DriverTripsPage() {
           trip_type,
           trip_date,
           start_time,
+          end_time,
           pickup_location,
           destination,
           flight_number,
@@ -249,6 +251,9 @@ export default function DriverTripsPage() {
                   <div>
                     <p className="font-bold text-gray-900">
                       {trip.trip_date} · {formatTime(trip.start_time)}
+                    {trip.end_time
+                      ? `—${formatTime(trip.end_time)}`
+                      : ""}
                     </p>
 
                     <p className="mt-1 text-sm text-emerald-600">
