@@ -1027,11 +1027,13 @@ const { error } = await supabase
             </div>
           </div>
 
-          {message && (
-            <p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">
-              {message}
-            </p>
-          )}
+          {message &&
+        !message.includes("已有其他") &&
+        !message.includes("冲突订单") &&
+        !message.includes("接送机行程已保存") &&
+        !message.includes("已经被分配") && (
+        <p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">{message}</p>
+      )}
 
           {message &&
             (message.includes("已有其他行程") ||
