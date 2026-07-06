@@ -36,6 +36,7 @@ type Trip = {
 export default function DriverTripsPage() {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
@@ -259,6 +260,10 @@ export default function DriverTripsPage() {
   }
 
 
+  const filteredTrips = trips.filter((trip) => {
+    return statusFilter === "all" || trip.status === statusFilter;
+  });
+
   return (
     <main className="min-h-screen bg-emerald-50 p-5">
       <div className="mx-auto max-w-md">
@@ -293,17 +298,38 @@ export default function DriverTripsPage() {
           </div>
         )}
 
+        {/* 司机端状态筛选 */}
+        <div className="mt-5 rounded-3xl bg-white p-4 shadow">
+          <label className="mb-2 block text-sm font-bold text-gray-800">
+            行程状态筛选
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+          >
+            <option value="all">全部状态</option>
+            <option value="scheduled">待执行</option>
+            <option value="in_progress">进行中</option>
+            <option value="completed">已完成</option>
+            <option value="cancelled">已取消</option>
+          </select>
+          <p className="mt-2 text-sm font-medium text-gray-700">
+            当前显示：{filteredTrips.length} 条，共 {trips.length} 条
+          </p>
+        </div>
+
         {loading ? (
           <div className="mt-5 rounded-2xl bg-white p-5 shadow">
             正在读取行程……
           </div>
-        ) : trips.length === 0 ? (
+        ) : filteredTrips.length === 0 ? (
           <div className="mt-5 rounded-2xl bg-white p-5 text-gray-500 shadow">
             暂时没有分配给你的行程
           </div>
         ) : (
           <div className="mt-5 space-y-4">
-            {trips.map((trip) => (
+            {filteredTrips.map((trip) => (
               <div
                 key={trip.id}
                 className="rounded-2xl bg-white p-5 shadow"
