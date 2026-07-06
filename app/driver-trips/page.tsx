@@ -38,6 +38,7 @@ export default function DriverTripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
@@ -284,7 +285,26 @@ export default function DriverTripsPage() {
     const matchesDate =
       dateFilter === "" || trip.trip_date === dateFilter;
 
-    return matchesStatus && matchesDate;
+    const keyword = searchTerm.trim().toLowerCase();
+
+    const searchText = [
+      trip.trip_number,
+      trip.flight_number,
+      trip.pickup_location,
+      trip.destination,
+      trip.customer_name,
+      trip.vehicles?.vehicle_code,
+      trip.vehicles?.model,
+      trip.vehicles?.plate_number,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchesSearch =
+      keyword === "" || searchText.includes(keyword);
+
+    return matchesStatus && matchesDate && matchesSearch;
   });
 
   return (
@@ -323,6 +343,19 @@ export default function DriverTripsPage() {
 
         {/* 司机端状态筛选 */}
         <div className="mt-5 rounded-3xl bg-white p-4 shadow">
+          <label className="block">
+            <span className="mb-2 block text-sm font-bold text-gray-800">
+              搜索行程
+            </span>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="搜索订单编号、航班号、地点、客户或车牌"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+            />
+          </label>
+
           <label className="mb-2 block text-sm font-bold text-gray-800">
             行程状态筛选
           </label>
@@ -356,6 +389,7 @@ export default function DriverTripsPage() {
       onClick={() => {
         setStatusFilter("all");
         setDateFilter("");
+        setSearchTerm("");
       }}
       className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-bold text-gray-700"
     >
