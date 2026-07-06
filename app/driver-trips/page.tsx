@@ -37,6 +37,7 @@ export default function DriverTripsPage() {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
@@ -260,8 +261,30 @@ export default function DriverTripsPage() {
   }
 
 
+  function getJapanDateText(offsetDays = 0) {
+    const now = new Date();
+    now.setDate(now.getDate() + offsetDays);
+
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+  }
+
+  const dateOptions = Array.from(
+    new Set(trips.map((trip) => trip.trip_date).filter(Boolean))
+  ).sort((a, b) => b.localeCompare(a));
+
   const filteredTrips = trips.filter((trip) => {
-    return statusFilter === "all" || trip.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || trip.status === statusFilter;
+
+    const matchesDate =
+      dateFilter === "" || trip.trip_date === dateFilter;
+
+    return matchesStatus && matchesDate;
   });
 
   return (
@@ -314,6 +337,36 @@ export default function DriverTripsPage() {
             <option value="completed">已完成</option>
             <option value="cancelled">已取消</option>
           </select>
+
+  <label className="mt-3 block">
+    <span className="mb-2 block text-sm font-bold text-gray-800">
+      日历选择日期
+    </span>
+    <input
+      type="date"
+      value={dateFilter}
+      onChange={(event) => setDateFilter(event.target.value)}
+      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+    />
+  </label>
+
+  {(statusFilter !== "all" || dateFilter) && (
+    <button
+      type="button"
+      onClick={() => {
+        setStatusFilter("all");
+        setDateFilter("");
+      }}
+      className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-bold text-gray-700"
+    >
+      清除筛选
+    </button>
+  )}
+
+
+
+  
+
           <p className="mt-2 text-sm font-medium text-gray-700">
             当前显示：{filteredTrips.length} 条，共 {trips.length} 条
           </p>
