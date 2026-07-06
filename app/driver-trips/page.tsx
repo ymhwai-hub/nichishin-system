@@ -36,7 +36,7 @@ type Trip = {
 export default function DriverTripsPage() {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("scheduled");
   const [dateFilter, setDateFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -278,6 +278,13 @@ export default function DriverTripsPage() {
     new Set(trips.map((trip) => trip.trip_date).filter(Boolean))
   ).sort((a, b) => b.localeCompare(a));
 
+  const driverSectionStatusOrder: Record<string, number> = {
+    scheduled: 1,
+    in_progress: 2,
+    completed: 3,
+    cancelled: 4,
+  };
+
   const filteredTrips = trips.filter((trip) => {
     const matchesStatus =
       statusFilter === "all" || trip.status === statusFilter;
@@ -305,7 +312,43 @@ export default function DriverTripsPage() {
       keyword === "" || searchText.includes(keyword);
 
     return matchesStatus && matchesDate && matchesSearch;
+  }).sort((a, b) => {
+    const statusDiff =
+      (driverSectionStatusOrder[a.status] ?? 99) -
+      (driverSectionStatusOrder[b.status] ?? 99);
+
+    if (statusDiff !== 0) {
+      return statusDiff;
+    }
+
+    const aTime = new Date(
+      a.start_time || `${a.trip_date}T00:00:00+09:00`
+    ).getTime();
+
+    const bTime = new Date(
+      b.start_time || `${b.trip_date}T00:00:00+09:00`
+    ).getTime();
+
+    return aTime - bTime;
   });
+
+  
+
+  
+
+  const driverStatusSections = [
+    { key: "scheduled", title: "待执行", safe: "注" },
+    { key: "in_progress", title: "进行中", safe: "意" },
+    { key: "completed", title: "已完成", safe: "安" },
+    { key: "cancelled", title: "已取消", safe: "全" },
+  ];
+
+  const driverStatusCounts = Object.fromEntries(
+    driverStatusSections.map((section) => [
+      section.key,
+      trips.filter((trip) => trip.status === section.key).length,
+    ])
+  ) as Record<string, number>;
 
   return (
     <main className="min-h-screen bg-emerald-50 p-5">
@@ -356,22 +399,63 @@ export default function DriverTripsPage() {
             />
           </label>
 
-          <label className="mb-2 block text-sm font-bold text-gray-800">
-            行程状态筛选
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
-          >
-            <option value="all">全部状态</option>
-            <option value="scheduled">待执行</option>
-            <option value="in_progress">进行中</option>
-            <option value="completed">已完成</option>
-            <option value="cancelled">已取消</option>
-          </select>
+<div>
+  <div className="mb-2 flex items-center justify-between">
+    <p className="text-sm font-bold text-gray-800">
+      行程状态
+    </p>
+    <p className="text-xs font-bold text-gray-400">
+      点击切换
+    </p>
+  </div>
 
-  <label className="mt-3 block">
+  <div className="grid grid-cols-4 gap-2">
+    {driverStatusSections.map((section) => {
+      const active = statusFilter === section.key;
+      const count = driverStatusCounts[section.key] ?? 0;
+
+      const colorClass =
+        section.key === "scheduled"
+          ? active
+            ? "border-blue-400 bg-blue-100 text-blue-900"
+            : "border-blue-100 bg-blue-50 text-blue-800"
+          : section.key === "in_progress"
+            ? active
+              ? "border-orange-400 bg-orange-100 text-orange-900"
+              : "border-orange-100 bg-orange-50 text-orange-800"
+            : section.key === "completed"
+              ? active
+                ? "border-emerald-400 bg-emerald-100 text-emerald-900"
+                : "border-emerald-100 bg-emerald-50 text-emerald-800"
+              : active
+                ? "border-gray-400 bg-gray-100 text-gray-900"
+                : "border-gray-200 bg-gray-50 text-gray-700";
+
+      return (
+        <button
+          key={section.key}
+          type="button"
+          onClick={() => setStatusFilter(section.key)}
+          className={`rounded-2xl border px-2 py-3 text-center shadow-sm ${colorClass}`}
+        >
+          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-extrabold shadow-sm">
+            {section.safe}
+          </div>
+
+          <p className="text-sm font-extrabold">
+            {section.title}
+          </p>
+
+          <p className="mt-1 text-xs font-bold opacity-70">
+            {count} 单
+          </p>
+        </button>
+      );
+    })}
+  </div>
+</div>
+
+<label className="mt-3 block">
     <span className="mb-2 block text-sm font-bold text-gray-800">
       日历选择日期
     </span>
@@ -383,11 +467,11 @@ export default function DriverTripsPage() {
     />
   </label>
 
-  {(statusFilter !== "all" || dateFilter) && (
+  {(statusFilter !== "scheduled" || dateFilter) && (
     <button
       type="button"
       onClick={() => {
-        setStatusFilter("all");
+        setStatusFilter("scheduled");
         setDateFilter("");
         setSearchTerm("");
       }}
@@ -416,7 +500,7 @@ export default function DriverTripsPage() {
           </div>
         ) : (
           <div className="mt-5 space-y-4">
-            {filteredTrips.map((trip) => (
+            {filteredTrips.map((trip, index) => (
               <div
                 key={trip.id}
                 className="rounded-2xl bg-white p-5 shadow"
