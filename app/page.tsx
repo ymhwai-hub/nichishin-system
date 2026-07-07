@@ -849,6 +849,7 @@ export default function Home() {
               </div>
             ) : role === "admin" ? (
               <AdminDashboard
+              onLogout={logout}
                 drivers={drivers}
                 vehicles={vehicles}
                 tripCount={tripCount}
@@ -889,12 +890,14 @@ export default function Home() {
               </div>
             )}
 
-            <button
+            {role !== "admin" && (
+<button
               onClick={logout}
               className="mt-6 w-full rounded-xl bg-white py-3 font-semibold text-gray-700 shadow"
             >
               退出登录
             </button>
+)}
           </>
         )}
 
@@ -919,6 +922,7 @@ export default function Home() {
 
 
 function AdminDashboard({
+  onLogout,
   drivers,
   vehicles,
   tripCount,
@@ -931,6 +935,7 @@ function AdminDashboard({
   todayOperationStats,
   monthlySystemStats,
 }: {
+  onLogout: () => void;
   drivers: Driver[];
   vehicles: Vehicle[];
   tripCount: number;
@@ -1032,7 +1037,18 @@ function AdminDashboard({
             </button>
           ))}
         </div>
-      </aside>
+      
+        <div className="mt-5 border-t border-gray-100 pt-4">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex w-full items-center justify-between rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-extrabold text-rose-700 transition hover:bg-rose-100 active:scale-95"
+          >
+            <span>退出登录</span>
+            <span className="text-xs">↪</span>
+          </button>
+        </div>
+</aside>
 
       <div className="space-y-4">
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
