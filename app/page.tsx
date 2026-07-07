@@ -1439,23 +1439,23 @@ function AdminDashboard({
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <QuickAction
-              title="+ 新建行程"
+              title="新建行程"
               description="创建订单并派车"
               href="/trips"
               tone="emerald"
             />
 
             <QuickAction
-              title="+ 添加司机"
+              title="添加司机"
               description="登记司机资料"
               href="/drivers"
               tone="blue"
             />
 
             <QuickAction
-              title="+ 添加车辆"
+              title="添加车辆"
               description="登记车辆资料"
               href="/vehicles"
               tone="amber"
@@ -1927,24 +1927,22 @@ function QuickAction({
           window.location.href = href;
         }
       }}
-      className={`rounded-2xl border px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5 active:scale-95 ${colorClass}`}
+      className={`relative min-h-[92px] rounded-2xl border px-4 py-4 pr-10 text-left shadow-sm transition hover:-translate-y-0.5 active:scale-95 ${colorClass}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-base font-extrabold">
-            {title}
+      <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-xs font-extrabold shadow-sm">
+        →
+      </span>
+
+      <div>
+        <p className="text-base font-extrabold leading-6">
+          {title}
+        </p>
+
+        {description && (
+          <p className="mt-1 text-xs font-bold leading-5 opacity-70">
+            {description}
           </p>
-
-          {description && (
-            <p className="mt-1 text-xs font-bold opacity-70">
-              {description}
-            </p>
-          )}
-        </div>
-
-        <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-extrabold">
-          →
-        </span>
+        )}
       </div>
     </button>
   );
