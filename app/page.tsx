@@ -809,7 +809,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-emerald-50 p-5">
-      <div className={role === "admin" ? "mx-auto max-w-6xl" : "mx-auto max-w-md"}>
+      <div className={role === "admin" ? "mx-auto max-w-7xl" : "mx-auto max-w-md"}>
         {view !== "home" && (
           <button
             onClick={() => setView("home")}
@@ -1003,15 +1003,17 @@ function AdminDashboard({
   ];
 
   return (
-    <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
-      <aside className="hidden rounded-3xl bg-white p-5 shadow lg:block">
+    <div className="mt-5 grid gap-5 lg:grid-cols-[240px_1fr]">
+      <aside className="sticky top-5 hidden h-fit rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm lg:block">
         <div>
-          <p className="text-2xl font-extrabold text-emerald-700">
-            日辰系统
-          </p>
-          <p className="mt-1 text-sm font-bold text-gray-400">
-            管理后台
-          </p>
+          <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-sm">
+            <p className="text-2xl font-extrabold">
+              日辰系统
+            </p>
+            <p className="mt-1 text-sm font-bold text-emerald-50">
+              管理后台
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 space-y-2">
@@ -1020,10 +1022,10 @@ function AdminDashboard({
               key={item.title}
               type="button"
               onClick={() => loadDashboardPage(item.href)}
-              className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-extrabold ${
+              className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-extrabold transition ${
                 index === 0
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-gray-600 hover:bg-gray-50"
+                  ? "bg-emerald-500 text-white shadow-sm"
+                  : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-700"
               }`}
             >
               {item.title}
@@ -1033,27 +1035,33 @@ function AdminDashboard({
       </aside>
 
       <div className="space-y-5">
-        <section className="rounded-3xl bg-white p-5 shadow">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-sm font-bold text-emerald-600">
-                欢迎回来，管理员
-              </p>
-              <h2 className="mt-1 text-2xl font-extrabold text-gray-900">
-                运营管理总览
+              <div className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+                ADMIN DASHBOARD
+              </div>
+
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-gray-900">
+                运营管理后台
               </h2>
-              <p className="mt-1 text-sm font-medium text-gray-500">
+
+              <p className="mt-2 text-sm font-bold text-gray-500">
                 {todayText}
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-600">
+                管理员：admin
+              </div>
+
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-extrabold text-gray-700"
+                className="rounded-2xl bg-gray-100 px-5 py-3 text-sm font-extrabold text-gray-700"
               >
-                刷新
+                刷新数据
               </button>
 
               <button
