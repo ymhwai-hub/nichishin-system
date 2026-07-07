@@ -1403,6 +1403,8 @@ function AdminDashboard({
             </div>
           </div>
         </section>
+        <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+          <div>
         <SystemStatistics
           monthlySystemStats={monthlySystemStats}
           tripCount={tripCount}
@@ -1410,9 +1412,10 @@ function AdminDashboard({
           cashCount={cashCount}
           customerCount={customerCount}
         />
+          </div>
 
-
-        <section className="rounded-3xl bg-white p-5 shadow">
+          <div>
+<section className="rounded-3xl bg-white p-5 shadow">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-extrabold text-gray-900">
@@ -1486,6 +1489,9 @@ function AdminDashboard({
             />
           </div>
         </section>
+          </div>
+        </section>
+
       </div>
     </div>
   );
