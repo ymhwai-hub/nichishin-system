@@ -56,6 +56,16 @@ type Trip = {
     | null;
 };
 
+function getDateFilterFromUrl() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+
+  return params.get("date") ?? "";
+}
+
 export default function TripsPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -81,7 +91,7 @@ export default function TripsPage() {
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState(getDateFilterFromUrl());
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -250,6 +260,13 @@ export default function TripsPage() {
       loadCustomers(),
         loadTrips(),
       ]);
+
+      const dateFromUrl = getDateFilterFromUrl();
+
+      if (dateFromUrl) {
+        setDateFilter(dateFromUrl);
+        setMessage(`已按日历日期筛选订单：${dateFromUrl}`);
+      }
 
       setLoading(false);
     }

@@ -1102,7 +1102,7 @@ function AdminDashboard({
           />
         </section>
 
-        <section className="grid gap-5 xl:grid-cols-[1.2fr_0.9fr]">
+        <section className="grid gap-5 xl:grid-cols-[1.25fr_0.85fr]">
           <div className="rounded-3xl bg-white p-5 shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -1181,74 +1181,78 @@ function AdminDashboard({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-extrabold text-gray-900">
-                  待处理提醒
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  驾照、体检、车检、保险、保养
-                </p>
-              </div>
+          <div className="space-y-5">
+            <DashboardTripCalendar recentTrips={recentTrips} />
 
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-extrabold text-rose-600">
-                {reminderCount} 条
-              </span>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {dashboardReminders.length === 0 ? (
-                <div className="rounded-2xl bg-emerald-50 p-4">
-                  <p className="font-extrabold text-emerald-700">
-                    目前没有紧急提醒
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-emerald-600">
-                    司机驾照、体检、车辆车检、保险和保养目前没有需要马上处理的事项。
+            <div className="rounded-3xl bg-white p-5 shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-extrabold text-gray-900">
+                    待处理提醒
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    驾照、体检、车检、保险、保养
                   </p>
                 </div>
-              ) : (
-                dashboardReminders.map((reminder) => {
-                  const reminderClass =
-                    reminder.tone === "rose"
-                      ? "bg-rose-50 text-rose-700"
-                      : reminder.tone === "amber"
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-emerald-50 text-emerald-700";
 
-                  return (
-                    <button
-                      key={reminder.id}
-                      type="button"
-                      onClick={() => loadDashboardPage("/reminders")}
-                      className={`w-full rounded-2xl px-4 py-3 text-left ${reminderClass}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-extrabold">
-                            {reminder.title}
-                          </p>
-                          <p className="mt-1 text-sm font-bold opacity-80">
-                            {reminder.description}
-                          </p>
+                <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-extrabold text-rose-600">
+                  {reminderCount} 条
+                </span>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {dashboardReminders.length === 0 ? (
+                  <div className="rounded-2xl bg-emerald-50 p-4">
+                    <p className="font-extrabold text-emerald-700">
+                      目前没有紧急提醒
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-emerald-600">
+                      司机驾照、体检、车辆车检、保险和保养目前没有需要马上处理的事项。
+                    </p>
+                  </div>
+                ) : (
+                  dashboardReminders.map((reminder) => {
+                    const reminderClass =
+                      reminder.tone === "rose"
+                        ? "bg-rose-50 text-rose-700"
+                        : reminder.tone === "amber"
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-emerald-50 text-emerald-700";
+
+                    return (
+                      <button
+                        key={reminder.id}
+                        type="button"
+                        onClick={() => loadDashboardPage("/reminders")}
+                        className={`w-full rounded-2xl px-4 py-3 text-left ${reminderClass}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-extrabold">
+                              {reminder.title}
+                            </p>
+                            <p className="mt-1 text-sm font-bold opacity-80">
+                              {reminder.description}
+                            </p>
+                          </div>
+
+                          <span className="shrink-0 rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold">
+                            {reminder.category}
+                          </span>
                         </div>
+                      </button>
+                    );
+                  })
+                )}
 
-                        <span className="shrink-0 rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold">
-                          {reminder.category}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-
-              <button
-                type="button"
-                onClick={() => loadDashboardPage("/reminders")}
-                className="w-full rounded-2xl bg-rose-500 py-3 font-extrabold text-white shadow-sm"
-              >
-                查看提醒详情
-              </button>
+                <button
+                  type="button"
+                  onClick={() => loadDashboardPage("/reminders")}
+                  className="w-full rounded-2xl bg-rose-500 py-3 font-extrabold text-white shadow-sm"
+                >
+                  查看提醒详情
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -1407,6 +1411,121 @@ function formatAdminTripTime(value?: string | null) {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+
+function DashboardTripCalendar({
+  recentTrips,
+}: {
+  recentTrips: DashboardTrip[];
+}) {
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const [year, month] = todayKey.split("-").map(Number);
+
+  const monthText = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+  }).format(new Date());
+
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const startOffset = (firstDay.getUTCDay() + 6) % 7;
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  const tripDates = new Set(
+    recentTrips
+      .map((trip) => trip.trip_date)
+      .filter((date): date is string => Boolean(date))
+  );
+
+  const cells: Array<number | null> = [
+    ...Array.from({ length: startOffset }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+  ];
+
+  const weekDays = ["一", "二", "三", "四", "五", "六", "日"];
+
+  return (
+    <div className="rounded-3xl bg-white p-5 shadow">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-extrabold text-gray-900">
+            行程日历
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {monthText}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => loadDashboardPage("/trips")}
+          className="rounded-xl bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700"
+        >
+          查看行程
+        </button>
+      </div>
+
+      <div className="mt-5 grid grid-cols-7 gap-2 text-center">
+        {weekDays.map((day) => (
+          <div key={day} className="text-xs font-extrabold text-gray-400">
+            {day}
+          </div>
+        ))}
+
+        {cells.map((day, index) => {
+          if (day === null) {
+            return <div key={`empty-${index}`} />;
+          }
+
+          const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(
+            day
+          ).padStart(2, "0")}`;
+
+          const hasTrip = tripDates.has(dateKey);
+          const isToday = dateKey === todayKey;
+
+          return (
+            <button
+              key={dateKey}
+              type="button"
+              onClick={() => loadDashboardPage(`/trips?date=${dateKey}`)}
+              className={`relative rounded-2xl py-2 text-sm font-extrabold ${
+                isToday
+                  ? "bg-emerald-500 text-white"
+                  : hasTrip
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-gray-50 text-gray-500"
+              }`}
+            >
+              <span>{day}</span>
+
+              {hasTrip && (
+                <span
+                  className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${
+                    isToday ? "bg-white" : "bg-emerald-500"
+                  }`}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 text-xs font-bold text-gray-500">
+        <span className="inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+        <span>今天</span>
+        <span className="inline-flex h-3 w-3 rounded-full bg-emerald-100" />
+        <span>有行程</span>
+      </div>
+    </div>
+  );
 }
 
 function TodayStatusCard({
