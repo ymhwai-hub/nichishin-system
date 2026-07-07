@@ -500,119 +500,162 @@ export default function DriverTripsPage() {
           </div>
         ) : (
           <div className="mt-5 space-y-4">
-            {filteredTrips.map((trip, index) => (
-              <div
-                key={trip.id}
-                className="rounded-2xl bg-white p-5 shadow"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-bold text-gray-900">
-                      {trip.trip_date} · {formatTime(trip.start_time)}
-                    {trip.end_time
-                      ? `—${formatTime(trip.end_time)}`
-                      : ""}
-                    </p>
+            {filteredTrips.map((trip) => {
+              const statusBadgeClass =
+                trip.status === "scheduled"
+                  ? "border-blue-100 bg-blue-50 text-blue-700"
+                  : trip.status === "in_progress"
+                    ? "border-orange-100 bg-orange-50 text-orange-700"
+                    : trip.status === "completed"
+                      ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                      : "border-gray-200 bg-gray-100 text-gray-600";
 
-                    <p className="mt-1 text-sm text-emerald-600">
-                      {tripTypeText(trip.trip_type)}
-                    </p>
+              return (
+                <div
+                  key={trip.id}
+                  className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+                >
+                  <div className="border-b border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-gray-400">
+                          订单编号：{trip.trip_number}
+                        </p>
+
+                        <p className="mt-1 text-xl font-extrabold tracking-tight text-gray-900">
+                          {trip.trip_date} · {formatTime(trip.start_time)}
+                          {trip.end_time
+                            ? `—${formatTime(trip.end_time)}`
+                            : ""}
+                        </p>
+
+                        <p className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">
+                          {tripTypeText(trip.trip_type)}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-extrabold ${statusBadgeClass}`}
+                      >
+                        {statusText(trip.status)}
+                      </span>
+                    </div>
                   </div>
 
-                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700">
-                    {statusText(trip.status)}
-                  </span>
-                </div>
+                  <div className="p-5">
+                    <div className="rounded-2xl bg-gray-50 p-4">
+                      <p className="text-xs font-bold text-gray-400">
+                        出发地
+                      </p>
+                      <p className="mt-1 text-base font-extrabold text-gray-900">
+                        {trip.pickup_location || "未填写出发地点"}
+                      </p>
 
-                {trip.flight_number && (
-                  <p className="mt-4 text-sm font-medium text-gray-700">
-                    航班号：{trip.flight_number}
-                  </p>
-                )}
+                      <div className="my-4 flex items-center gap-3 text-gray-300">
+                        <div className="h-px flex-1 bg-gray-200" />
+                        <span className="text-lg font-bold">→</span>
+                        <div className="h-px flex-1 bg-gray-200" />
+                      </div>
 
-                <div className="mt-4 rounded-xl bg-gray-50 p-4">
-                  <p className="font-medium text-gray-900">
-                    {trip.pickup_location || "未填写出发地点"}
-                  </p>
-
-                  <p className="my-2 text-sm text-gray-400">↓</p>
-
-                  <p className="font-medium text-gray-900">
-                    {trip.destination || "未填写目的地"}
-                  </p>
-                </div>
-
-                <div className="mt-4 text-sm text-gray-500">
-                  <p>
-                    车辆：
-                    {trip.vehicles
-                      ? `${trip.vehicles.vehicle_code} · ${trip.vehicles.model}`
-                      : "未分配"}
-                  </p>
-
-                  <p className="mt-1">
-                    车牌：
-                    {trip.vehicles?.plate_number || "未填写"}
-                  </p>
-
-                  <p className="mt-1">
-                    客户：{trip.customer_name ?? "未关联客户"}
-                  </p>
-
-                  <p className="mt-1">
-                    乘客：{trip.passenger_count}人 · 行李：
-                    {trip.luggage_count}件
-                  </p>
-
-                  <p className="mt-2 text-xs text-gray-400">
-                    订单编号：{trip.trip_number}
-                  </p>
-
-                  {getTripOverlapWarning(trip) && (
-                    <div className="mt-3 rounded-2xl border-2 border-red-300 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
-                      <p>⚠️ 时间重叠提醒</p>
-                      <p className="mt-1 leading-6">
-                        {getTripOverlapWarning(trip)}
+                      <p className="text-xs font-bold text-gray-400">
+                        目的地
+                      </p>
+                      <p className="mt-1 text-base font-extrabold text-gray-900">
+                        {trip.destination || "未填写目的地"}
                       </p>
                     </div>
-                  )}
-                </div>
 
-                {trip.status === "scheduled" && (
-                  <button
-                    onClick={() =>
-                      updateTripStatus(trip.id, "in_progress")
-                    }
-                    disabled={updatingTripId === trip.id}
-                    className="mt-4 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white disabled:opacity-50"
-                  >
-                    {updatingTripId === trip.id
-                      ? "正在更新……"
-                      : "开始行程"}
-                  </button>
-                )}
+                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
+                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                        <span className="font-bold text-gray-400">航班号</span>
+                        <span className="font-extrabold text-gray-800">
+                          {trip.flight_number || "未填写"}
+                        </span>
+                      </div>
 
-                {trip.status === "in_progress" && (
-                  <button
-                    onClick={() =>
-                      updateTripStatus(trip.id, "completed")
-                    }
-                    disabled={updatingTripId === trip.id}
-                    className="mt-4 w-full rounded-xl bg-blue-500 py-3 font-bold text-white disabled:opacity-50"
-                  >
-                    {updatingTripId === trip.id
-                      ? "正在更新……"
-                      : "完成行程"}
-                  </button>
-                )}
+                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                        <span className="font-bold text-gray-400">车辆</span>
+                        <span className="text-right font-extrabold text-gray-800">
+                          {trip.vehicles
+                            ? `${trip.vehicles.vehicle_code} · ${trip.vehicles.model}`
+                            : "未分配"}
+                        </span>
+                      </div>
 
-                {trip.status === "completed" && (
-                  <div className="mt-4 rounded-xl bg-gray-100 py-3 text-center font-semibold text-gray-600">
-                    此行程已完成
+                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                        <span className="font-bold text-gray-400">车牌</span>
+                        <span className="font-extrabold text-gray-800">
+                          {trip.vehicles?.plate_number || "未填写"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                        <span className="font-bold text-gray-400">客户</span>
+                        <span className="font-extrabold text-gray-800">
+                          {trip.customer_name ?? "未关联客户"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                        <span className="font-bold text-gray-400">人数 / 行李</span>
+                        <span className="font-extrabold text-gray-800">
+                          {trip.passenger_count}人 · {trip.luggage_count}件
+                        </span>
+                      </div>
+                    </div>
+
+                    {getTripOverlapWarning(trip) && (
+                      <div className="mt-4 rounded-2xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                        <p>⚠️ 时间重叠提醒</p>
+                        <p className="mt-1 leading-6">
+                          {getTripOverlapWarning(trip)}
+                        </p>
+                      </div>
+                    )}
+
+                    {trip.status === "scheduled" && (
+                      <button
+                        onClick={() =>
+                          updateTripStatus(trip.id, "in_progress")
+                        }
+                        disabled={updatingTripId === trip.id}
+                        className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                      >
+                        {updatingTripId === trip.id
+                          ? "正在更新……"
+                          : "开始行程"}
+                      </button>
+                    )}
+
+                    {trip.status === "in_progress" && (
+                      <button
+                        onClick={() =>
+                          updateTripStatus(trip.id, "completed")
+                        }
+                        disabled={updatingTripId === trip.id}
+                        className="mt-5 w-full rounded-2xl bg-blue-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                      >
+                        {updatingTripId === trip.id
+                          ? "正在更新……"
+                          : "完成行程"}
+                      </button>
+                    )}
+
+                    {trip.status === "completed" && (
+                      <div className="mt-5 rounded-2xl bg-emerald-50 py-4 text-center font-extrabold text-emerald-700">
+                        此行程已完成
+                      </div>
+                    )}
+
+                    {trip.status === "cancelled" && (
+                      <div className="mt-5 rounded-2xl bg-gray-100 py-4 text-center font-extrabold text-gray-500">
+                        此行程已取消
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
