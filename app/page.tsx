@@ -331,6 +331,13 @@ export default function Home() {
   }
 
   async function loadRecentTrips() {
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
     const { data, error } = await supabase
       .from("trips")
       .select(`
@@ -342,9 +349,10 @@ export default function Home() {
         destination,
         status
       `)
+      .gte("trip_date", todayText)
       .order("trip_date", { ascending: true })
       .order("start_time", { ascending: true })
-      .limit(6);
+      .limit(12);
 
     if (error) {
       setDatabaseError(`读取近期行程失败：${error.message}`);
@@ -353,6 +361,7 @@ export default function Home() {
 
     setRecentTrips((data as DashboardTrip[]) ?? []);
   }
+
 
   async function loadDashboardReminders() {
     const [driverResult, vehicleResult] = await Promise.all([
@@ -828,6 +837,46 @@ function AdminDashboard({
     weekday: "long",
   }).format(new Date());
 
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
+  const tomorrowKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(tomorrowDate);
+
+  const recentTripSections = [
+    {
+      key: "today",
+      title: "今天行程",
+      trips: recentTrips.filter((trip) => trip.trip_date === todayKey),
+    },
+    {
+      key: "tomorrow",
+      title: "明天行程",
+      trips: recentTrips.filter((trip) => trip.trip_date === tomorrowKey),
+    },
+    {
+      key: "future",
+      title: "未来行程",
+      trips: recentTrips.filter(
+        (trip) =>
+          Boolean(trip.trip_date) &&
+          trip.trip_date !== todayKey &&
+          trip.trip_date !== tomorrowKey
+      ),
+    },
+  ];
+
   const menuItems = [
     { title: "仪表盘", href: "/" },
     { title: "司机管理", href: "/drivers" },
@@ -959,7 +1008,7 @@ function AdminDashboard({
                   近期行程管理
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  进入订单列表查看、编辑、取消、恢复行程
+                  按今天、明天、未来分组查看近期派单
                 </p>
               </div>
 
@@ -972,45 +1021,61 @@ function AdminDashboard({
               </button>
             </div>
 
-            <div className="mt-5 space-y-3">
-              {recentTrips.length === 0 ? (
-                <div className="rounded-2xl bg-gray-50 p-4 text-sm font-medium text-gray-500">
-                  暂无近期行程
-                </div>
-              ) : (
-                recentTrips.map((trip) => (
-                  <button
-                    key={trip.id}
-                    type="button"
-                    onClick={() => loadDashboardPage("/trips")}
-                    className="w-full rounded-2xl bg-gray-50 px-4 py-4 text-left"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-extrabold text-gray-900">
-                          {trip.trip_date || "未填写日期"} · {formatAdminTripTime(trip.start_time)}
-                        </p>
+            <div className="mt-5 space-y-4">
+              {recentTripSections.map((section) => (
+                <div key={section.key}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-extrabold text-gray-900">
+                      {section.title}
+                    </p>
 
-                        <p className="mt-2 text-sm font-bold text-gray-700">
-                          {trip.pickup_location || "未填写出发地"}
-                          <span className="mx-2 text-gray-300">→</span>
-                          {trip.destination || "未填写目的地"}
-                        </p>
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-extrabold text-gray-500">
+                      {section.trips.length} 单
+                    </span>
+                  </div>
 
-                        <p className="mt-2 text-xs font-medium text-gray-400">
-                          订单编号：{trip.trip_number || "未填写"}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold ${adminTripStatusClass(trip.status)}`}
-                      >
-                        {adminTripStatusText(trip.status)}
-                      </span>
+                  {section.trips.length === 0 ? (
+                    <div className="mt-2 rounded-2xl bg-gray-50 p-4 text-sm font-medium text-gray-400">
+                      暂无{section.title}
                     </div>
-                  </button>
-                ))
-              )}
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {section.trips.map((trip) => (
+                        <button
+                          key={trip.id}
+                          type="button"
+                          onClick={() => loadDashboardPage("/trips")}
+                          className="w-full rounded-2xl bg-gray-50 px-4 py-4 text-left"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-extrabold text-gray-900">
+                                {trip.trip_date || "未填写日期"} · {formatAdminTripTime(trip.start_time)}
+                              </p>
+
+                              <p className="mt-2 text-sm font-bold text-gray-700">
+                                {trip.pickup_location || "未填写出发地"}
+                                <span className="mx-2 text-gray-300">→</span>
+                                {trip.destination || "未填写目的地"}
+                              </p>
+
+                              <p className="mt-2 text-xs font-medium text-gray-400">
+                                订单编号：{trip.trip_number || "未填写"}
+                              </p>
+                            </div>
+
+                            <span
+                              className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold ${adminTripStatusClass(trip.status)}`}
+                            >
+                              {adminTripStatusText(trip.status)}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
