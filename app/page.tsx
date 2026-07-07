@@ -56,6 +56,12 @@ type TodayOperationStats = {
 };
 
 
+type MonthlySystemStats = {
+  trips: number;
+  parkingRecords: number;
+};
+
+
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [role, setRole] = useState<Role>("driver");
@@ -103,6 +109,11 @@ export default function Home() {
       in_progress: 0,
       completed: 0,
       cancelled: 0,
+    });
+  const [monthlySystemStats, setMonthlySystemStats] =
+    useState<MonthlySystemStats>({
+      trips: 0,
+      parkingRecords: 0,
     });
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
@@ -618,6 +629,50 @@ export default function Home() {
     setTodayOperationStats(stats);
   }
 
+  async function loadMonthlySystemStats() {
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const [year, month] = todayText.split("-").map(Number);
+    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+
+    const nextMonthDate = new Date(Date.UTC(year, month, 1));
+    const nextMonthStart = nextMonthDate.toISOString().slice(0, 10);
+
+    const [tripResult, parkingResult] = await Promise.all([
+      supabase
+        .from("trips")
+        .select("*", { count: "exact", head: true })
+        .gte("trip_date", monthStart)
+        .lt("trip_date", nextMonthStart),
+
+      supabase
+        .from("parking_records")
+        .select("*", { count: "exact", head: true })
+        .gte("recorded_at", `${monthStart}T00:00:00+09:00`)
+        .lt("recorded_at", `${nextMonthStart}T00:00:00+09:00`),
+    ]);
+
+    if (tripResult.error) {
+      setDatabaseError(`读取本月行程统计失败：${tripResult.error.message}`);
+      return;
+    }
+
+    if (parkingResult.error) {
+      setDatabaseError(`读取本月停车统计失败：${parkingResult.error.message}`);
+      return;
+    }
+
+    setMonthlySystemStats({
+      trips: tripResult.count ?? 0,
+      parkingRecords: parkingResult.count ?? 0,
+    });
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -634,6 +689,7 @@ export default function Home() {
       loadRecentTrips(),
       loadDashboardReminders(),
       loadTodayOperationStats(),
+      loadMonthlySystemStats(),
     ]);
 
     setLoading(false);
@@ -803,6 +859,7 @@ export default function Home() {
                 recentTrips={recentTrips}
                 dashboardReminders={dashboardReminders}
                 todayOperationStats={todayOperationStats}
+                monthlySystemStats={monthlySystemStats}
               />
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-4">
@@ -872,6 +929,7 @@ function AdminDashboard({
   recentTrips,
   dashboardReminders,
   todayOperationStats,
+  monthlySystemStats,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
@@ -883,6 +941,7 @@ function AdminDashboard({
   recentTrips: DashboardTrip[];
   dashboardReminders: DashboardReminder[];
   todayOperationStats: TodayOperationStats;
+  monthlySystemStats: MonthlySystemStats;
 }) {
   const todayText = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Tokyo",
@@ -1344,6 +1403,14 @@ function AdminDashboard({
             </div>
           </div>
         </section>
+        <SystemStatistics
+          monthlySystemStats={monthlySystemStats}
+          tripCount={tripCount}
+          parkingCount={parkingCount}
+          cashCount={cashCount}
+          customerCount={customerCount}
+        />
+
 
         <section className="rounded-3xl bg-white p-5 shadow">
           <h3 className="text-lg font-extrabold text-gray-900">
@@ -1524,6 +1591,107 @@ function DashboardTripCalendar({
         <span className="inline-flex h-3 w-3 rounded-full bg-emerald-100" />
         <span>有行程</span>
       </div>
+    </div>
+  );
+}
+
+function SystemStatistics({
+  monthlySystemStats,
+  tripCount,
+  parkingCount,
+  cashCount,
+  customerCount,
+}: {
+  monthlySystemStats: MonthlySystemStats;
+  tripCount: number;
+  parkingCount: number;
+  cashCount: number;
+  customerCount: number;
+}) {
+  return (
+    <section className="rounded-3xl bg-white p-5 shadow">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-extrabold text-gray-900">
+            系统统计
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            本月数据与累计运营情况
+          </p>
+        </div>
+
+        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+          自动统计
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SystemStatItem
+          title="本月行程"
+          value={monthlySystemStats.trips}
+          unit="个"
+          note={`累计 ${tripCount} 个`}
+          tone="emerald"
+        />
+
+        <SystemStatItem
+          title="本月停车"
+          value={monthlySystemStats.parkingRecords}
+          unit="条"
+          note={`累计 ${parkingCount} 条`}
+          tone="blue"
+        />
+
+        <SystemStatItem
+          title="代收现金"
+          value={cashCount}
+          unit="条"
+          note="司机登记记录"
+          tone="amber"
+        />
+
+        <SystemStatItem
+          title="客户总数"
+          value={customerCount}
+          unit="人"
+          note="客户资料库"
+          tone="rose"
+        />
+      </div>
+    </section>
+  );
+}
+
+function SystemStatItem({
+  title,
+  value,
+  unit,
+  note,
+  tone,
+}: {
+  title: string;
+  value: number;
+  unit: string;
+  note: string;
+  tone: "emerald" | "blue" | "amber" | "rose";
+}) {
+  const colorClass =
+    tone === "emerald"
+      ? "bg-emerald-50 text-emerald-800"
+      : tone === "blue"
+        ? "bg-blue-50 text-blue-800"
+        : tone === "amber"
+          ? "bg-amber-50 text-amber-800"
+          : "bg-rose-50 text-rose-800";
+
+  return (
+    <div className={`rounded-2xl px-4 py-4 ${colorClass}`}>
+      <p className="text-sm font-extrabold">{title}</p>
+      <p className="mt-2 text-3xl font-extrabold">
+        {value}
+        <span className="ml-1 text-sm font-bold opacity-70">{unit}</span>
+      </p>
+      <p className="mt-2 text-xs font-bold opacity-70">{note}</p>
     </div>
   );
 }
