@@ -48,6 +48,14 @@ type DashboardReminder = {
 };
 
 
+type TodayOperationStats = {
+  scheduled: number;
+  in_progress: number;
+  completed: number;
+  cancelled: number;
+};
+
+
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [role, setRole] = useState<Role>("driver");
@@ -89,6 +97,13 @@ export default function Home() {
   const [customerCount, setCustomerCount] = useState(0);
   const [recentTrips, setRecentTrips] = useState<DashboardTrip[]>([]);
   const [dashboardReminders, setDashboardReminders] = useState<DashboardReminder[]>([]);
+  const [todayOperationStats, setTodayOperationStats] =
+    useState<TodayOperationStats>({
+      scheduled: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0,
+    });
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -567,6 +582,42 @@ export default function Home() {
     setDashboardReminders(reminders.slice(0, 6));
   }
 
+  async function loadTodayOperationStats() {
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const { data, error } = await supabase
+      .from("trips")
+      .select("status")
+      .eq("trip_date", todayText);
+
+    if (error) {
+      setDatabaseError(`读取今日运营统计失败：${error.message}`);
+      return;
+    }
+
+    const stats: TodayOperationStats = {
+      scheduled: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    for (const trip of data ?? []) {
+      const status = trip.status as keyof TodayOperationStats;
+
+      if (status in stats) {
+        stats[status] += 1;
+      }
+    }
+
+    setTodayOperationStats(stats);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -582,6 +633,7 @@ export default function Home() {
       loadCustomerCount(),
       loadRecentTrips(),
       loadDashboardReminders(),
+      loadTodayOperationStats(),
     ]);
 
     setLoading(false);
@@ -750,6 +802,7 @@ export default function Home() {
                 customerCount={customerCount}
                 recentTrips={recentTrips}
                 dashboardReminders={dashboardReminders}
+                todayOperationStats={todayOperationStats}
               />
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-4">
@@ -818,6 +871,7 @@ function AdminDashboard({
   customerCount,
   recentTrips,
   dashboardReminders,
+  todayOperationStats,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
@@ -828,6 +882,7 @@ function AdminDashboard({
   customerCount: number;
   recentTrips: DashboardTrip[];
   dashboardReminders: DashboardReminder[];
+  todayOperationStats: TodayOperationStats;
 }) {
   const todayText = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Tokyo",
@@ -950,6 +1005,53 @@ function AdminDashboard({
                 新建 / 查看行程
               </button>
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-white p-5 shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-extrabold text-gray-900">
+                今日运营状态
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                按今天订单状态自动统计
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => loadDashboardPage("/trips")}
+              className="rounded-xl bg-gray-50 px-4 py-2 text-sm font-bold text-gray-600"
+            >
+              查看订单
+            </button>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <TodayStatusCard
+              title="待执行"
+              value={todayOperationStats.scheduled}
+              tone="blue"
+            />
+
+            <TodayStatusCard
+              title="进行中"
+              value={todayOperationStats.in_progress}
+              tone="orange"
+            />
+
+            <TodayStatusCard
+              title="已完成"
+              value={todayOperationStats.completed}
+              tone="emerald"
+            />
+
+            <TodayStatusCard
+              title="已取消"
+              value={todayOperationStats.cancelled}
+              tone="gray"
+            />
           </div>
         </section>
 
@@ -1305,6 +1407,35 @@ function formatAdminTripTime(value?: string | null) {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+function TodayStatusCard({
+  title,
+  value,
+  tone,
+}: {
+  title: string;
+  value: number;
+  tone: "blue" | "orange" | "emerald" | "gray";
+}) {
+  const colorClass =
+    tone === "blue"
+      ? "border-blue-100 bg-blue-50 text-blue-800"
+      : tone === "orange"
+        ? "border-orange-100 bg-orange-50 text-orange-800"
+        : tone === "emerald"
+          ? "border-emerald-100 bg-emerald-50 text-emerald-800"
+          : "border-gray-200 bg-gray-50 text-gray-700";
+
+  return (
+    <div className={`rounded-2xl border px-4 py-4 ${colorClass}`}>
+      <p className="text-sm font-extrabold">{title}</p>
+      <p className="mt-2 text-3xl font-extrabold">
+        {value}
+        <span className="ml-1 text-sm font-bold opacity-70">单</span>
+      </p>
+    </div>
+  );
 }
 
 function DashboardStat({
