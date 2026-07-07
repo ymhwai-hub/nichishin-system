@@ -304,6 +304,14 @@ export default function DriverTripDetailPage() {
               </div>
             </section>
 
+            <button
+              type="button"
+              onClick={() => router.push(`/parking?tripId=${trip.id}`)}
+              className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 font-extrabold text-blue-700 shadow-sm"
+            >
+              停车登记
+            </button>
+
             {trip.status === "scheduled" && (
               <button
                 type="button"

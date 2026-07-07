@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 type Driver = {
@@ -44,6 +45,9 @@ type ParkingRecord = {
 };
 
 export default function ParkingPage() {
+  const searchParams = useSearchParams();
+  const tripIdFromUrl = searchParams.get("tripId") ?? "";
+
   const [driver, setDriver] = useState<Driver | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [records, setRecords] = useState<ParkingRecord[]>([]);
@@ -141,8 +145,16 @@ export default function ParkingPage() {
       const loadedTrips = (tripData as Trip[]) ?? [];
       setTrips(loadedTrips);
 
-      if (loadedTrips.length > 0) {
+      if (
+        tripIdFromUrl &&
+        loadedTrips.some((trip) => trip.id === tripIdFromUrl)
+      ) {
+        setSelectedTripId(tripIdFromUrl);
+        setMessage("已自动选择当前订单");
+      } else if (loadedTrips.length > 0) {
         setSelectedTripId(loadedTrips[0].id);
+      } else if (tripIdFromUrl) {
+        setMessage("当前订单不在可登记停车的行程列表中");
       }
 
       await loadRecords(driverData.id);
@@ -150,7 +162,7 @@ export default function ParkingPage() {
     }
 
     initialize();
-  }, []);
+  }, [tripIdFromUrl]);
 
   function getCurrentLocation() {
     if (!navigator.geolocation) {
