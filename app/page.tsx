@@ -38,6 +38,16 @@ type DashboardTrip = {
 };
 
 
+type DashboardReminder = {
+  id: string;
+  title: string;
+  description: string;
+  daysLeft: number;
+  category: string;
+  tone: "rose" | "amber" | "emerald";
+};
+
+
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [role, setRole] = useState<Role>("driver");
@@ -78,6 +88,7 @@ export default function Home() {
   const [reminderCount, setReminderCount] = useState(0);
   const [customerCount, setCustomerCount] = useState(0);
   const [recentTrips, setRecentTrips] = useState<DashboardTrip[]>([]);
+  const [dashboardReminders, setDashboardReminders] = useState<DashboardReminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -343,6 +354,210 @@ export default function Home() {
     setRecentTrips((data as DashboardTrip[]) ?? []);
   }
 
+  async function loadDashboardReminders() {
+    const [driverResult, vehicleResult] = await Promise.all([
+      supabase
+        .from("drivers")
+        .select(`
+          id,
+          driver_code,
+          name,
+          license_expiry_date,
+          medical_check_date,
+          next_medical_check_date,
+          status
+        `)
+        .eq("status", "active"),
+
+      supabase
+        .from("vehicles")
+        .select(`
+          id,
+          vehicle_code,
+          plate_number,
+          model,
+          insurance_expiry_date,
+          inspection_expiry_date,
+          last_maintenance_date,
+          next_maintenance_date,
+          status
+        `)
+        .neq("status", "inactive"),
+    ]);
+
+    if (driverResult.error) {
+      setDatabaseError(
+        `读取司机提醒明细失败：${driverResult.error.message}`
+      );
+      return;
+    }
+
+    if (vehicleResult.error) {
+      setDatabaseError(
+        `读取车辆提醒明细失败：${vehicleResult.error.message}`
+      );
+      return;
+    }
+
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const today = new Date(`${todayText}T00:00:00+09:00`);
+
+    const daysLeft = (dateText: string) => {
+      const due = new Date(`${dateText}T00:00:00+09:00`);
+
+      return Math.ceil(
+        (due.getTime() - today.getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+    };
+
+    const addMonths = (dateText: string, months: number) => {
+      const [year, month, day] = dateText.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      date.setUTCMonth(date.getUTCMonth() + months);
+
+      return date.toISOString().slice(0, 10);
+    };
+
+    const addYears = (dateText: string, years: number) => {
+      const [year, month, day] = dateText.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+
+      date.setUTCFullYear(date.getUTCFullYear() + years);
+
+      return date.toISOString().slice(0, 10);
+    };
+
+    const getTone = (left: number): "rose" | "amber" | "emerald" => {
+      if (left <= 7) return "rose";
+      if (left <= 30) return "amber";
+      return "emerald";
+    };
+
+    const reminders: DashboardReminder[] = [];
+
+    for (const driver of driverResult.data ?? []) {
+      if (driver.license_expiry_date) {
+        const left = daysLeft(driver.license_expiry_date);
+
+        if (left <= 30) {
+          reminders.push({
+            id: `driver-license-${driver.id}`,
+            title: `${driver.driver_code} · ${driver.name}`,
+            description:
+              left < 0
+                ? `驾照已过期 ${Math.abs(left)} 天`
+                : `驾照还有 ${left} 天到期`,
+            daysLeft: left,
+            category: "驾照",
+            tone: getTone(left),
+          });
+        }
+      }
+
+      const nextMedicalDate =
+        driver.next_medical_check_date ||
+        (driver.medical_check_date
+          ? addYears(driver.medical_check_date, 1)
+          : null);
+
+      if (nextMedicalDate) {
+        const left = daysLeft(nextMedicalDate);
+
+        if (left <= 60) {
+          reminders.push({
+            id: `driver-medical-${driver.id}`,
+            title: `${driver.driver_code} · ${driver.name}`,
+            description:
+              left < 0
+                ? `体检已超过 ${Math.abs(left)} 天`
+                : `体检还有 ${left} 天需要安排`,
+            daysLeft: left,
+            category: "体检",
+            tone: getTone(left),
+          });
+        }
+      }
+    }
+
+    for (const vehicle of vehicleResult.data ?? []) {
+      const vehicleTitle = `${vehicle.vehicle_code} · ${
+        vehicle.plate_number || vehicle.model || "车辆"
+      }`;
+
+      const nextMaintenanceDate =
+        vehicle.next_maintenance_date ||
+        (vehicle.last_maintenance_date
+          ? addMonths(vehicle.last_maintenance_date, 3)
+          : null);
+
+      if (nextMaintenanceDate) {
+        const left = daysLeft(nextMaintenanceDate);
+
+        if (left <= 15) {
+          reminders.push({
+            id: `vehicle-maintenance-${vehicle.id}`,
+            title: vehicleTitle,
+            description:
+              left < 0
+                ? `保养已超过 ${Math.abs(left)} 天`
+                : `保养还有 ${left} 天需要处理`,
+            daysLeft: left,
+            category: "保养",
+            tone: getTone(left),
+          });
+        }
+      }
+
+      if (vehicle.inspection_expiry_date) {
+        const left = daysLeft(vehicle.inspection_expiry_date);
+
+        if (left <= 30) {
+          reminders.push({
+            id: `vehicle-inspection-${vehicle.id}`,
+            title: vehicleTitle,
+            description:
+              left < 0
+                ? `车检已过期 ${Math.abs(left)} 天`
+                : `车检还有 ${left} 天到期`,
+            daysLeft: left,
+            category: "车检",
+            tone: getTone(left),
+          });
+        }
+      }
+
+      if (vehicle.insurance_expiry_date) {
+        const left = daysLeft(vehicle.insurance_expiry_date);
+
+        if (left <= 30) {
+          reminders.push({
+            id: `vehicle-insurance-${vehicle.id}`,
+            title: vehicleTitle,
+            description:
+              left < 0
+                ? `保险已过期 ${Math.abs(left)} 天`
+                : `保险还有 ${left} 天到期`,
+            daysLeft: left,
+            category: "保险",
+            tone: getTone(left),
+          });
+        }
+      }
+    }
+
+    reminders.sort((a, b) => a.daysLeft - b.daysLeft);
+
+    setDashboardReminders(reminders.slice(0, 6));
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -357,6 +572,7 @@ export default function Home() {
       loadReminderCount(),
       loadCustomerCount(),
       loadRecentTrips(),
+      loadDashboardReminders(),
     ]);
 
     setLoading(false);
@@ -524,6 +740,7 @@ export default function Home() {
                 reminderCount={reminderCount}
                 customerCount={customerCount}
                 recentTrips={recentTrips}
+                dashboardReminders={dashboardReminders}
               />
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-4">
@@ -591,6 +808,7 @@ function AdminDashboard({
   reminderCount,
   customerCount,
   recentTrips,
+  dashboardReminders,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
@@ -600,6 +818,7 @@ function AdminDashboard({
   reminderCount: number;
   customerCount: number;
   recentTrips: DashboardTrip[];
+  dashboardReminders: DashboardReminder[];
 }) {
   const todayText = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Tokyo",
@@ -812,16 +1031,49 @@ function AdminDashboard({
             </div>
 
             <div className="mt-5 space-y-3">
-              <div className="rounded-2xl bg-rose-50 p-4">
-                <p className="font-extrabold text-rose-700">
-                  {reminderCount > 0
-                    ? "有事项需要确认"
-                    : "目前没有紧急提醒"}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-rose-600">
-                  系统会自动统计司机和车辆相关到期提醒，避免漏掉驾照、保险、车检和保养。
-                </p>
-              </div>
+              {dashboardReminders.length === 0 ? (
+                <div className="rounded-2xl bg-emerald-50 p-4">
+                  <p className="font-extrabold text-emerald-700">
+                    目前没有紧急提醒
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-emerald-600">
+                    司机驾照、体检、车辆车检、保险和保养目前没有需要马上处理的事项。
+                  </p>
+                </div>
+              ) : (
+                dashboardReminders.map((reminder) => {
+                  const reminderClass =
+                    reminder.tone === "rose"
+                      ? "bg-rose-50 text-rose-700"
+                      : reminder.tone === "amber"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-emerald-50 text-emerald-700";
+
+                  return (
+                    <button
+                      key={reminder.id}
+                      type="button"
+                      onClick={() => loadDashboardPage("/reminders")}
+                      className={`w-full rounded-2xl px-4 py-3 text-left ${reminderClass}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-extrabold">
+                            {reminder.title}
+                          </p>
+                          <p className="mt-1 text-sm font-bold opacity-80">
+                            {reminder.description}
+                          </p>
+                        </div>
+
+                        <span className="shrink-0 rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold">
+                          {reminder.category}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
 
               <button
                 type="button"
