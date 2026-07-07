@@ -1009,36 +1009,67 @@ function AdminDashboard({
 
   return (
     <div className="mt-3 grid gap-4 lg:grid-cols-[240px_1fr]">
-      <aside className="sticky top-5 hidden h-fit rounded-3xl border border-gray-100 bg-white p-4 shadow-sm lg:block">
-        <div>
-          <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-sm">
-            <p className="text-2xl font-extrabold">
-              日辰系统
-            </p>
-            <p className="mt-1 text-sm font-bold text-emerald-50">
-              管理后台
-            </p>
-          </div>
+      <aside className="sticky top-4 hidden h-fit rounded-3xl border border-gray-100 bg-white p-4 shadow-sm lg:block">
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-500 p-4 text-white">
+          <p className="text-xs font-bold opacity-80">日辰系统</p>
+          <h2 className="mt-1 text-xl font-extrabold">管理后台</h2>
+          <p className="mt-2 text-xs font-bold opacity-80">Nichishin Admin</p>
         </div>
 
         <div className="mt-5 space-y-2">
-          {menuItems.map((item, index) => (
-            <button
-              key={item.title}
-              type="button"
-              onClick={() => loadDashboardPage(item.href)}
-              className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-extrabold transition ${
-                index === 0
-                  ? "bg-emerald-500 text-white shadow-sm"
-                  : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-700"
-              }`}
-            >
-              {item.title}
-            </button>
-          ))}
+          {[
+            { label: "仪表盘", icon: "⌂", href: "/" },
+            { label: "司机管理", icon: "人", href: "/drivers" },
+            { label: "车辆管理", icon: "车", href: "/vehicles" },
+            { label: "行程管理", icon: "单", href: "/trips" },
+            { label: "停车记录", icon: "P", href: "/admin-parking" },
+            { label: "费用审核", icon: "¥", href: "/admin-cash" },
+            { label: "提醒管理", icon: "铃", href: "/reminders" },
+            { label: "客户管理", icon: "客", href: "/customers" },
+          ].map((item) => {
+            const currentPath =
+              typeof window === "undefined" ? "/" : window.location.pathname;
+
+            const active =
+              item.href === "/"
+                ? currentPath === "/"
+                : currentPath.startsWith(item.href);
+
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => {
+                  window.location.href = item.href;
+                }}
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-extrabold transition active:scale-95 ${
+                  active
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-700"
+                }`}
+              >
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-extrabold ${
+                    active
+                      ? "bg-white/20 text-white"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {item.icon}
+                </span>
+
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
-      
-        <div className="mt-5 border-t border-gray-100 pt-4">
+
+        <div className="mt-5 rounded-2xl border border-gray-100 bg-gray-50 p-3">
+          <p className="text-xs font-bold text-gray-400">当前版本</p>
+          <p className="mt-1 text-sm font-extrabold text-gray-700">内部测试版</p>
+        </div>
+
+        <div className="mt-4 border-t border-gray-100 pt-4">
           <button
             type="button"
             onClick={onLogout}
@@ -1048,7 +1079,7 @@ function AdminDashboard({
             <span className="text-xs">↪</span>
           </button>
         </div>
-</aside>
+      </aside>
 
       <div className="space-y-4">
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
