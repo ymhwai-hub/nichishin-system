@@ -58,6 +58,7 @@ export default function ParkingPage() {
   const [mileage, setMileage] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [accuracy, setAccuracy] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [locating, setLocating] = useState(false);
@@ -175,9 +176,20 @@ export default function ParkingPage() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const accuracyMeters = Math.round(position.coords.accuracy);
+
         setLatitude(position.coords.latitude.toFixed(6));
         setLongitude(position.coords.longitude.toFixed(6));
-        setMessage("当前位置获取成功");
+        setAccuracy(String(accuracyMeters));
+
+        if (accuracyMeters > 200) {
+          setMessage(
+            `定位成功，但精度较差：约 ±${accuracyMeters} 米。建议重新获取，或手动填写准确地点名称。`
+          );
+        } else {
+          setMessage(`当前位置获取成功，精度约 ±${accuracyMeters} 米`);
+        }
+
         setLocating(false);
       },
       (error) => {
@@ -191,6 +203,7 @@ export default function ParkingPage() {
           errorText = "获取位置超时，请再试一次";
         }
 
+        setAccuracy("");
         setMessage(errorText);
         setLocating(false);
       },
@@ -363,6 +376,27 @@ export default function ParkingPage() {
                 <div className="rounded-xl bg-gray-50 p-4 text-sm font-medium text-gray-800">
                   <p>纬度：{latitude}</p>
                   <p className="mt-1">经度：{longitude}</p>
+
+                  {accuracy && (
+                    <p className="mt-1">
+                      定位精度：约 ±{accuracy} 米
+                    </p>
+                  )}
+
+                  {accuracy && Number(accuracy) > 200 && (
+                    <div className="mt-3 rounded-xl bg-amber-50 p-3 text-amber-700">
+                      当前定位可能有偏差。建议再点一次“获取当前位置”，或者在地点名称里手动填写准确地点。
+                    </div>
+                  )}
+
+                  <a
+                    href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 block rounded-xl bg-white px-4 py-3 text-center font-bold text-blue-600 shadow-sm"
+                  >
+                    用 Google Maps 确认位置
+                  </a>
                 </div>
               )}
 
