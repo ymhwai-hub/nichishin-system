@@ -288,10 +288,10 @@ export default function ParkingPage() {
           </div>
 
           <a
-            href="/"
+            href={tripIdFromUrl ? `/driver-trips/${tripIdFromUrl}` : "/"}
             className="rounded-xl bg-white px-4 py-2 text-sm text-gray-700 shadow"
           >
-            返回首页
+            {tripIdFromUrl ? "返回订单" : "返回首页"}
           </a>
         </div>
 
