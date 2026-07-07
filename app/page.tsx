@@ -569,270 +569,325 @@ function AdminDashboard({
     weekday: "long",
   }).format(new Date());
 
+  const menuItems = [
+    { title: "仪表盘", href: "/" },
+    { title: "司机管理", href: "/drivers" },
+    { title: "车辆管理", href: "/vehicles" },
+    { title: "行程管理", href: "/trips" },
+    { title: "停车记录", href: "/admin-parking" },
+    { title: "费用审核", href: "/admin-cash" },
+    { title: "提醒管理", href: "/reminders" },
+    { title: "客户管理", href: "/customers" },
+  ];
+
   return (
-    <div className="mt-5 space-y-5">
-      <div className="flex flex-col gap-3 rounded-3xl bg-white p-5 shadow sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-5 grid gap-5 lg:grid-cols-[220px_1fr]">
+      <aside className="hidden rounded-3xl bg-white p-5 shadow lg:block">
         <div>
-          <p className="text-sm font-bold text-emerald-600">
-            管理员仪表盘
+          <p className="text-2xl font-extrabold text-emerald-700">
+            日辰系统
           </p>
-          <h2 className="mt-1 text-2xl font-extrabold text-gray-900">
-            今日运营总览
-          </h2>
-          <p className="mt-1 text-sm font-medium text-gray-500">
-            {todayText}
+          <p className="mt-1 text-sm font-bold text-gray-400">
+            管理后台
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => loadDashboardPage("/trips")}
-          className="rounded-2xl bg-emerald-500 px-5 py-3 font-extrabold text-white shadow-sm"
-        >
-          新建 / 查看行程
-        </button>
-      </div>
+        <div className="mt-6 space-y-2">
+          {menuItems.map((item, index) => (
+            <button
+              key={item.title}
+              type="button"
+              onClick={() => loadDashboardPage(item.href)}
+              className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-extrabold ${
+                index === 0
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {item.title}
+            </button>
+          ))}
+        </div>
+      </aside>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <DashboardStat
-          title="司机总数"
-          value={`${drivers.length}`}
-          unit="人"
-          note="司机资料"
-          tone="emerald"
-          onClick={() => loadDashboardPage("/drivers")}
-        />
-
-        <DashboardStat
-          title="车辆总数"
-          value={`${vehicles.length}`}
-          unit="台"
-          note="车辆资料"
-          tone="blue"
-          onClick={() => loadDashboardPage("/vehicles")}
-        />
-
-        <DashboardStat
-          title="行程订单"
-          value={`${tripCount}`}
-          unit="个"
-          note="全部订单"
-          tone="amber"
-          onClick={() => loadDashboardPage("/trips")}
-        />
-
-        <DashboardStat
-          title="停车记录"
-          value={`${parkingCount}`}
-          unit="条"
-          note="司机定位"
-          tone="teal"
-          onClick={() => loadDashboardPage("/admin-parking")}
-        />
-
-        <DashboardStat
-          title="待处理提醒"
-          value={`${reminderCount}`}
-          unit="条"
-          note="需要确认"
-          tone="rose"
-          onClick={() => loadDashboardPage("/reminders")}
-        />
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+      <div className="space-y-5">
         <section className="rounded-3xl bg-white p-5 shadow">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-extrabold text-gray-900">
-                近期运营入口
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                快速进入常用管理页面
+              <p className="text-sm font-bold text-emerald-600">
+                欢迎回来，管理员
+              </p>
+              <h2 className="mt-1 text-2xl font-extrabold text-gray-900">
+                运营管理总览
+              </h2>
+              <p className="mt-1 text-sm font-medium text-gray-500">
+                {todayText}
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => loadDashboardPage("/trips")}
-              className="rounded-xl bg-gray-50 px-4 py-2 text-sm font-bold text-gray-600"
-            >
-              查看全部
-            </button>
-          </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-extrabold text-gray-700"
+              >
+                刷新
+              </button>
 
-          <div className="mt-5 space-y-3">
-            <DashboardRow
-              title="行程管理"
-              description="新增订单、编辑订单、取消或恢复行程"
-              value={`${tripCount} 个`}
-              onClick={() => loadDashboardPage("/trips")}
-            />
-
-            <DashboardRow
-              title="停车记录"
-              description="查看司机上传的停车地点和 GPS 位置"
-              value={`${parkingCount} 条`}
-              onClick={() => loadDashboardPage("/admin-parking")}
-            />
-
-            <DashboardRow
-              title="费用审核"
-              description="查看司机代收现金和费用记录"
-              value={`${cashCount} 条`}
-              onClick={() => loadDashboardPage("/admin-cash")}
-            />
-
-            <DashboardRow
-              title="客户管理"
-              description="管理散客、导游、旅行社、企业和 VIP"
-              value={`${customerCount} 人`}
-              onClick={() => loadDashboardPage("/customers")}
-            />
+              <button
+                type="button"
+                onClick={() => loadDashboardPage("/trips")}
+                className="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-extrabold text-white shadow-sm"
+              >
+                新建 / 查看行程
+              </button>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-5 shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-extrabold text-gray-900">
-                待处理提醒
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                驾照、车检、保险、保养、体检
-              </p>
-            </div>
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+          <DashboardStat
+            title="司机总数"
+            value={`${drivers.length}`}
+            unit="人"
+            note="正常"
+            tone="emerald"
+            onClick={() => loadDashboardPage("/drivers")}
+          />
 
-            <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-extrabold text-rose-600">
-              {reminderCount} 条
-            </span>
-          </div>
+          <DashboardStat
+            title="车辆总数"
+            value={`${vehicles.length}`}
+            unit="台"
+            note="车辆资料"
+            tone="blue"
+            onClick={() => loadDashboardPage("/vehicles")}
+          />
 
-          <div className="mt-5 rounded-2xl bg-rose-50 p-4">
-            <p className="font-extrabold text-rose-700">
-              {reminderCount > 0
-                ? "有事项需要处理"
-                : "目前没有紧急提醒"}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-rose-600">
-              系统会根据司机驾照、体检、车辆车检、保险、保养日期自动统计提醒数量。
-            </p>
-          </div>
+          <DashboardStat
+            title="行程订单"
+            value={`${tripCount}`}
+            unit="个"
+            note="全部订单"
+            tone="amber"
+            onClick={() => loadDashboardPage("/trips")}
+          />
 
-          <button
-            type="button"
+          <DashboardStat
+            title="停车记录"
+            value={`${parkingCount}`}
+            unit="条"
+            note="GPS记录"
+            tone="teal"
+            onClick={() => loadDashboardPage("/admin-parking")}
+          />
+
+          <DashboardStat
+            title="待处理提醒"
+            value={`${reminderCount}`}
+            unit="条"
+            note="需要处理"
+            tone="rose"
             onClick={() => loadDashboardPage("/reminders")}
-            className="mt-4 w-full rounded-2xl bg-rose-500 py-3 font-extrabold text-white shadow-sm"
-          >
-            查看提醒详情
-          </button>
+          />
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-[1.2fr_0.9fr]">
+          <div className="rounded-3xl bg-white p-5 shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-gray-900">
+                  近期行程管理
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  进入订单列表查看、编辑、取消、恢复行程
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => loadDashboardPage("/trips")}
+                className="rounded-xl bg-gray-50 px-4 py-2 text-sm font-bold text-gray-600"
+              >
+                查看全部
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <DashboardRow
+                title="今日行程"
+                description="查看今天和近期派单情况"
+                value={`${tripCount} 个`}
+                onClick={() => loadDashboardPage("/trips")}
+              />
+
+              <DashboardRow
+                title="客户资料"
+                description="散客、导游、旅行社、企业和 VIP"
+                value={`${customerCount} 人`}
+                onClick={() => loadDashboardPage("/customers")}
+              />
+
+              <DashboardRow
+                title="费用审核"
+                description="司机代收现金和费用登记"
+                value={`${cashCount} 条`}
+                onClick={() => loadDashboardPage("/admin-cash")}
+              />
+
+              <DashboardRow
+                title="停车 GPS"
+                description="查看司机登记地点与地图坐标"
+                value={`${parkingCount} 条`}
+                onClick={() => loadDashboardPage("/admin-parking")}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-gray-900">
+                  待处理提醒
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  驾照、体检、车检、保险、保养
+                </p>
+              </div>
+
+              <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-extrabold text-rose-600">
+                {reminderCount} 条
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <div className="rounded-2xl bg-rose-50 p-4">
+                <p className="font-extrabold text-rose-700">
+                  {reminderCount > 0
+                    ? "有事项需要确认"
+                    : "目前没有紧急提醒"}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-rose-600">
+                  系统会自动统计司机和车辆相关到期提醒，避免漏掉驾照、保险、车检和保养。
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => loadDashboardPage("/reminders")}
+                className="w-full rounded-2xl bg-rose-500 py-3 font-extrabold text-white shadow-sm"
+              >
+                查看提醒详情
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-2">
+          <div className="rounded-3xl bg-white p-5 shadow">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-gray-900">
+                司机预览
+              </h3>
+              <button
+                type="button"
+                onClick={() => loadDashboardPage("/drivers")}
+                className="text-sm font-bold text-emerald-600"
+              >
+                管理司机
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {drivers.slice(0, 4).map((driver) => (
+                <div
+                  key={driver.id}
+                  className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
+                >
+                  <div>
+                    <p className="font-extrabold text-gray-900">
+                      {driver.driver_code} · {driver.name}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      电话：{driver.phone || "未填写"}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">
+                    {driver.status === "active" ? "在职" : driver.status}
+                  </span>
+                </div>
+              ))}
+
+              {drivers.length === 0 && (
+                <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
+                  暂无司机资料
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 shadow">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-extrabold text-gray-900">
+                车辆预览
+              </h3>
+              <button
+                type="button"
+                onClick={() => loadDashboardPage("/vehicles")}
+                className="text-sm font-bold text-emerald-600"
+              >
+                管理车辆
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {vehicles.slice(0, 4).map((vehicle) => (
+                <div
+                  key={vehicle.id}
+                  className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
+                >
+                  <div>
+                    <p className="font-extrabold text-gray-900">
+                      {vehicle.vehicle_code} · {vehicle.model}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      车牌：{vehicle.plate_number || "未填写"}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">
+                    {vehicle.status}
+                  </span>
+                </div>
+              ))}
+
+              {vehicles.length === 0 && (
+                <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
+                  暂无车辆资料
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-white p-5 shadow">
+          <h3 className="text-lg font-extrabold text-gray-900">
+            快速操作
+          </h3>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <QuickAction title="新建行程" href="/trips" />
+            <QuickAction title="添加司机" href="/drivers" />
+            <QuickAction title="添加车辆" href="/vehicles" />
+            <QuickAction title="停车记录" href="/admin-parking" />
+            <QuickAction title="费用审核" href="/admin-cash" />
+            <QuickAction title="客户管理" href="/customers" />
+            <QuickAction title="提醒管理" href="/reminders" />
+            <QuickAction title="刷新数据" onClick={() => window.location.reload()} />
+          </div>
         </section>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        <section className="rounded-3xl bg-white p-5 shadow">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-extrabold text-gray-900">
-              司机预览
-            </h3>
-            <button
-              type="button"
-              onClick={() => loadDashboardPage("/drivers")}
-              className="text-sm font-bold text-emerald-600"
-            >
-              管理司机
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {drivers.slice(0, 4).map((driver) => (
-              <div
-                key={driver.id}
-                className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
-              >
-                <div>
-                  <p className="font-extrabold text-gray-900">
-                    {driver.driver_code} · {driver.name}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    电话：{driver.phone || "未填写"}
-                  </p>
-                </div>
-
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600">
-                  {driver.status === "active" ? "在职" : driver.status}
-                </span>
-              </div>
-            ))}
-
-            {drivers.length === 0 && (
-              <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
-                暂无司机资料
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-3xl bg-white p-5 shadow">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-extrabold text-gray-900">
-              车辆预览
-            </h3>
-            <button
-              type="button"
-              onClick={() => loadDashboardPage("/vehicles")}
-              className="text-sm font-bold text-emerald-600"
-            >
-              管理车辆
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {vehicles.slice(0, 4).map((vehicle) => (
-              <div
-                key={vehicle.id}
-                className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
-              >
-                <div>
-                  <p className="font-extrabold text-gray-900">
-                    {vehicle.vehicle_code} · {vehicle.model}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    车牌：{vehicle.plate_number || "未填写"}
-                  </p>
-                </div>
-
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">
-                  {vehicle.status}
-                </span>
-              </div>
-            ))}
-
-            {vehicles.length === 0 && (
-              <p className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
-                暂无车辆资料
-              </p>
-            )}
-          </div>
-        </section>
-      </div>
-
-      <section className="rounded-3xl bg-white p-5 shadow">
-        <h3 className="text-lg font-extrabold text-gray-900">
-          快速操作
-        </h3>
-
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <QuickAction title="新建行程" href="/trips" />
-          <QuickAction title="添加司机" href="/drivers" />
-          <QuickAction title="添加车辆" href="/vehicles" />
-          <QuickAction title="停车记录" href="/admin-parking" />
-          <QuickAction title="费用审核" href="/admin-cash" />
-          <QuickAction title="客户管理" href="/customers" />
-          <QuickAction title="提醒管理" href="/reminders" />
-          <QuickAction title="刷新数据" onClick={() => window.location.reload()} />
-        </div>
-      </section>
     </div>
   );
 }
