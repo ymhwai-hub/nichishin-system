@@ -27,6 +27,17 @@ type Vehicle = {
   status: string;
 };
 
+type DashboardTrip = {
+  id: string;
+  trip_number: string | null;
+  trip_date: string | null;
+  start_time: string | null;
+  pickup_location: string | null;
+  destination: string | null;
+  status: string | null;
+};
+
+
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [role, setRole] = useState<Role>("driver");
@@ -66,6 +77,7 @@ export default function Home() {
   const [cashCount, setCashCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
   const [customerCount, setCustomerCount] = useState(0);
+  const [recentTrips, setRecentTrips] = useState<DashboardTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState("");
 
@@ -307,6 +319,30 @@ export default function Home() {
     setCustomerCount(count ?? 0);
   }
 
+  async function loadRecentTrips() {
+    const { data, error } = await supabase
+      .from("trips")
+      .select(`
+        id,
+        trip_number,
+        trip_date,
+        start_time,
+        pickup_location,
+        destination,
+        status
+      `)
+      .order("trip_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(6);
+
+    if (error) {
+      setDatabaseError(`读取近期行程失败：${error.message}`);
+      return;
+    }
+
+    setRecentTrips((data as DashboardTrip[]) ?? []);
+  }
+
   async function loadDatabase() {
     setLoading(true);
     setDatabaseError("");
@@ -320,6 +356,7 @@ export default function Home() {
       loadCashCount(),
       loadReminderCount(),
       loadCustomerCount(),
+      loadRecentTrips(),
     ]);
 
     setLoading(false);
@@ -486,6 +523,7 @@ export default function Home() {
                 cashCount={cashCount}
                 reminderCount={reminderCount}
                 customerCount={customerCount}
+                recentTrips={recentTrips}
               />
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-4">
@@ -552,6 +590,7 @@ function AdminDashboard({
   cashCount,
   reminderCount,
   customerCount,
+  recentTrips,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
@@ -560,6 +599,7 @@ function AdminDashboard({
   cashCount: number;
   reminderCount: number;
   customerCount: number;
+  recentTrips: DashboardTrip[];
 }) {
   const todayText = new Intl.DateTimeFormat("zh-CN", {
     timeZone: "Asia/Tokyo",
@@ -714,33 +754,44 @@ function AdminDashboard({
             </div>
 
             <div className="mt-5 space-y-3">
-              <DashboardRow
-                title="今日行程"
-                description="查看今天和近期派单情况"
-                value={`${tripCount} 个`}
-                onClick={() => loadDashboardPage("/trips")}
-              />
+              {recentTrips.length === 0 ? (
+                <div className="rounded-2xl bg-gray-50 p-4 text-sm font-medium text-gray-500">
+                  暂无近期行程
+                </div>
+              ) : (
+                recentTrips.map((trip) => (
+                  <button
+                    key={trip.id}
+                    type="button"
+                    onClick={() => loadDashboardPage("/trips")}
+                    className="w-full rounded-2xl bg-gray-50 px-4 py-4 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-extrabold text-gray-900">
+                          {trip.trip_date || "未填写日期"} · {formatAdminTripTime(trip.start_time)}
+                        </p>
 
-              <DashboardRow
-                title="客户资料"
-                description="散客、导游、旅行社、企业和 VIP"
-                value={`${customerCount} 人`}
-                onClick={() => loadDashboardPage("/customers")}
-              />
+                        <p className="mt-2 text-sm font-bold text-gray-700">
+                          {trip.pickup_location || "未填写出发地"}
+                          <span className="mx-2 text-gray-300">→</span>
+                          {trip.destination || "未填写目的地"}
+                        </p>
 
-              <DashboardRow
-                title="费用审核"
-                description="司机代收现金和费用登记"
-                value={`${cashCount} 条`}
-                onClick={() => loadDashboardPage("/admin-cash")}
-              />
+                        <p className="mt-2 text-xs font-medium text-gray-400">
+                          订单编号：{trip.trip_number || "未填写"}
+                        </p>
+                      </div>
 
-              <DashboardRow
-                title="停车 GPS"
-                description="查看司机登记地点与地图坐标"
-                value={`${parkingCount} 条`}
-                onClick={() => loadDashboardPage("/admin-parking")}
-              />
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold ${adminTripStatusClass(trip.status)}`}
+                      >
+                        {adminTripStatusText(trip.status)}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </div>
 
@@ -894,6 +945,49 @@ function AdminDashboard({
 
 function loadDashboardPage(path: string) {
   window.location.href = path;
+}
+
+function adminTripStatusText(status?: string | null) {
+  const map: Record<string, string> = {
+    scheduled: "待执行",
+    in_progress: "进行中",
+    completed: "已完成",
+    cancelled: "已取消",
+  };
+
+  return map[status || ""] || "未知";
+}
+
+function adminTripStatusClass(status?: string | null) {
+  if (status === "in_progress") {
+    return "bg-orange-50 text-orange-700";
+  }
+
+  if (status === "completed") {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (status === "cancelled") {
+    return "bg-gray-100 text-gray-600";
+  }
+
+  return "bg-blue-50 text-blue-700";
+}
+
+function formatAdminTripTime(value?: string | null) {
+  if (!value) return "--:--";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value.slice(0, 5);
+  }
+
+  return date.toLocaleTimeString("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function DashboardStat({
