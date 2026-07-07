@@ -808,7 +808,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
+    <main className={role === "admin" ? "min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white p-5" : "min-h-screen bg-emerald-50 p-5"}>
       <div className={role === "admin" ? "mx-auto max-w-7xl" : "mx-auto max-w-md"}>
         {view !== "home" && (
           <button
@@ -1004,7 +1004,7 @@ function AdminDashboard({
 
   return (
     <div className="mt-5 grid gap-5 lg:grid-cols-[240px_1fr]">
-      <aside className="sticky top-5 hidden h-fit rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm lg:block">
+      <aside className="sticky top-5 hidden h-fit rounded-3xl border border-gray-100 bg-white p-5 shadow-sm lg:block">
         <div>
           <div className="rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 text-white shadow-sm">
             <p className="text-2xl font-extrabold">
@@ -1035,7 +1035,7 @@ function AdminDashboard({
       </aside>
 
       <div className="space-y-5">
-        <section className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <div className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
@@ -1075,7 +1075,7 @@ function AdminDashboard({
           </div>
         </section>
 
-        <section className="rounded-3xl bg-white p-5 shadow">
+        <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-extrabold text-gray-900">
@@ -1170,7 +1170,7 @@ function AdminDashboard({
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[1.25fr_0.85fr]">
-          <div className="rounded-3xl bg-white p-5 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-extrabold text-gray-900">
@@ -1214,7 +1214,7 @@ function AdminDashboard({
                           key={trip.id}
                           type="button"
                           onClick={() => loadDashboardPage("/trips")}
-                          className="w-full rounded-2xl bg-gray-50 px-4 py-4 text-left"
+                          className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-4 text-left"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -1251,7 +1251,7 @@ function AdminDashboard({
           <div className="space-y-5">
             <DashboardTripCalendar recentTrips={recentTrips} />
 
-            <div className="rounded-3xl bg-white p-5 shadow">
+            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-extrabold text-gray-900">
@@ -1325,7 +1325,7 @@ function AdminDashboard({
         </section>
 
         <section className="grid gap-5 xl:grid-cols-2">
-          <div className="rounded-3xl bg-white p-5 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-extrabold text-gray-900">
                 司机预览
@@ -1343,7 +1343,7 @@ function AdminDashboard({
               {drivers.slice(0, 4).map((driver) => (
                 <div
                   key={driver.id}
-                  className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
                 >
                   <div>
                     <p className="font-extrabold text-gray-900">
@@ -1368,7 +1368,7 @@ function AdminDashboard({
             </div>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-extrabold text-gray-900">
                 车辆预览
@@ -1386,7 +1386,7 @@ function AdminDashboard({
               {vehicles.slice(0, 4).map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3"
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
                 >
                   <div>
                     <p className="font-extrabold text-gray-900">
@@ -1423,7 +1423,7 @@ function AdminDashboard({
           </div>
 
           <div>
-<section className="rounded-3xl bg-white p-5 shadow">
+<section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-extrabold text-gray-900">
@@ -1591,7 +1591,7 @@ function DashboardTripCalendar({
   const weekDays = ["一", "二", "三", "四", "五", "六", "日"];
 
   return (
-    <div className="rounded-3xl bg-white p-5 shadow">
+    <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-extrabold text-gray-900">
@@ -1681,7 +1681,7 @@ function SystemStatistics({
   customerCount: number;
 }) {
   return (
-    <section className="rounded-3xl bg-white p-5 shadow">
+    <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-extrabold text-gray-900">
@@ -1757,7 +1757,7 @@ function SystemStatItem({
           : "bg-rose-50 text-rose-800";
 
   return (
-    <div className={`rounded-2xl px-4 py-4 ${colorClass}`}>
+    <div className={`rounded-2xl border px-4 py-4 shadow-sm ${colorClass}`}>
       <p className="text-sm font-extrabold">{title}</p>
       <p className="mt-2 text-3xl font-extrabold">
         {value}
@@ -1787,7 +1787,7 @@ function TodayStatusCard({
           : "border-gray-200 bg-gray-50 text-gray-700";
 
   return (
-    <div className={`rounded-2xl border px-4 py-4 ${colorClass}`}>
+    <div className={`rounded-2xl border px-4 py-4 shadow-sm ${colorClass}`}>
       <p className="text-sm font-extrabold">{title}</p>
       <p className="mt-2 text-3xl font-extrabold">
         {value}
@@ -1827,7 +1827,7 @@ function DashboardStat({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-3xl bg-white p-5 text-left shadow transition active:scale-95"
+      className="rounded-3xl border border-gray-100 bg-white p-5 text-left shadow-sm transition active:scale-95"
     >
       <div className={`inline-flex rounded-2xl px-3 py-2 text-sm font-bold ${colorClass}`}>
         {title}
@@ -1927,7 +1927,7 @@ function QuickAction({
           window.location.href = href;
         }
       }}
-      className={`rounded-2xl border px-4 py-4 text-left shadow-sm transition active:scale-95 ${colorClass}`}
+      className={`rounded-2xl border px-4 py-4 text-left shadow-sm transition hover:-translate-y-0.5 active:scale-95 ${colorClass}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
