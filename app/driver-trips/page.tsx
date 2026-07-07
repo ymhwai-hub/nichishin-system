@@ -613,6 +613,16 @@ export default function DriverTripsPage() {
                       </div>
                     )}
 
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.location.href = `/driver-trips/${trip.id}`;
+                      }}
+                      className="mt-5 w-full rounded-2xl border border-emerald-200 bg-emerald-50 py-4 font-extrabold text-emerald-700"
+                    >
+                      查看详情
+                    </button>
+
                     {trip.status === "scheduled" && (
                       <button
                         onClick={() =>
