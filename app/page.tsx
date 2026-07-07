@@ -1413,19 +1413,77 @@ function AdminDashboard({
 
 
         <section className="rounded-3xl bg-white p-5 shadow">
-          <h3 className="text-lg font-extrabold text-gray-900">
-            快速操作
-          </h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-extrabold text-gray-900">
+                快速操作
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                常用管理入口，一键进入处理
+              </p>
+            </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <QuickAction title="新建行程" href="/trips" />
-            <QuickAction title="添加司机" href="/drivers" />
-            <QuickAction title="添加车辆" href="/vehicles" />
-            <QuickAction title="停车记录" href="/admin-parking" />
-            <QuickAction title="费用审核" href="/admin-cash" />
-            <QuickAction title="客户管理" href="/customers" />
-            <QuickAction title="提醒管理" href="/reminders" />
-            <QuickAction title="刷新数据" onClick={() => window.location.reload()} />
+            <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-extrabold text-gray-500">
+              OPERATIONS
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <QuickAction
+              title="+ 新建行程"
+              description="创建订单并派车"
+              href="/trips"
+              tone="emerald"
+            />
+
+            <QuickAction
+              title="+ 添加司机"
+              description="登记司机资料"
+              href="/drivers"
+              tone="blue"
+            />
+
+            <QuickAction
+              title="+ 添加车辆"
+              description="登记车辆资料"
+              href="/vehicles"
+              tone="amber"
+            />
+
+            <QuickAction
+              title="停车记录"
+              description="查看司机 GPS"
+              href="/admin-parking"
+              tone="teal"
+            />
+
+            <QuickAction
+              title="费用审核"
+              description="查看代收现金"
+              href="/admin-cash"
+              tone="rose"
+            />
+
+            <QuickAction
+              title="客户管理"
+              description="管理客户资料"
+              href="/customers"
+              tone="purple"
+            />
+
+            <QuickAction
+              title="提醒管理"
+              description="查看到期提醒"
+              href="/reminders"
+              tone="orange"
+            />
+
+            <QuickAction
+              title="刷新数据"
+              description="重新读取后台"
+              onClick={() => window.location.reload()}
+              tone="gray"
+            />
           </div>
         </section>
       </div>
@@ -1806,13 +1864,42 @@ function DashboardRow({
 
 function QuickAction({
   title,
+  description,
   href,
   onClick,
+  tone = "gray",
 }: {
   title: string;
+  description?: string;
   href?: string;
   onClick?: () => void;
+  tone?:
+    | "emerald"
+    | "blue"
+    | "amber"
+    | "teal"
+    | "rose"
+    | "purple"
+    | "orange"
+    | "gray";
 }) {
+  const colorClass =
+    tone === "emerald"
+      ? "border-emerald-100 bg-emerald-50 text-emerald-800"
+      : tone === "blue"
+        ? "border-blue-100 bg-blue-50 text-blue-800"
+        : tone === "amber"
+          ? "border-amber-100 bg-amber-50 text-amber-800"
+          : tone === "teal"
+            ? "border-teal-100 bg-teal-50 text-teal-800"
+            : tone === "rose"
+              ? "border-rose-100 bg-rose-50 text-rose-800"
+              : tone === "purple"
+                ? "border-purple-100 bg-purple-50 text-purple-800"
+                : tone === "orange"
+                  ? "border-orange-100 bg-orange-50 text-orange-800"
+                  : "border-gray-200 bg-gray-50 text-gray-700";
+
   return (
     <button
       type="button"
@@ -1826,9 +1913,25 @@ function QuickAction({
           window.location.href = href;
         }
       }}
-      className="rounded-2xl bg-gray-50 px-4 py-3 text-sm font-extrabold text-gray-700 active:scale-95"
+      className={`rounded-2xl border px-4 py-4 text-left shadow-sm transition active:scale-95 ${colorClass}`}
     >
-      {title}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-base font-extrabold">
+            {title}
+          </p>
+
+          {description && (
+            <p className="mt-1 text-xs font-bold opacity-70">
+              {description}
+            </p>
+          )}
+        </div>
+
+        <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-extrabold">
+          →
+        </span>
+      </div>
     </button>
   );
 }
