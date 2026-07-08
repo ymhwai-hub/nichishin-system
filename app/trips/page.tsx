@@ -822,39 +822,58 @@ const { error } = await supabase
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-2xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-emerald-600">日辰株式会社</p>
-            <h1 className="text-2xl font-bold text-gray-900">
-              行程管理
-            </h1>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-7xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                TRIP MANAGEMENT
+              </p>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                行程管理
+              </h1>
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                新增订单、编辑行程、派司机车辆，并检查时间冲突。
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-extrabold text-emerald-700 transition active:scale-95"
+              >
+                刷新页面
+              </button>
+
+              <a
+                href="/"
+                className="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+              >
+                返回后台
+              </a>
+            </div>
           </div>
+        </section>
 
-          <a
-            href="/"
-            className="rounded-xl bg-white px-4 py-2 text-sm text-gray-700 shadow"
-          >
-            返回首页
-          </a>
-        </div>
-
-        <div className="mt-5 rounded-3xl bg-white p-6 shadow">
-          <h2 className="text-lg font-bold text-gray-900">
+        <div className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-extrabold text-gray-900">
             {editingTripId ? "编辑行程" : "新增行程"}
           </h2>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 行程类型
               </label>
 
               <select
                 value={tripType}
                 onChange={(event) => setTripType(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="airport_pickup">机场接机</option>
                 <option value="airport_dropoff">机场送机</option>
@@ -863,7 +882,7 @@ const { error } = await supabase
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 行程日期
               </label>
 
@@ -871,12 +890,12 @@ const { error } = await supabase
                 type="date"
                 value={tripDate}
                 onChange={(event) => setTripDate(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 出发时间
               </label>
 
@@ -884,12 +903,12 @@ const { error } = await supabase
                 type="time"
                 value={startTime}
                 onChange={(event) => setStartTime(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
               <div>
-                <label className="mb-1 block text-sm text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   结束时间
                 </label>
 
@@ -897,12 +916,12 @@ const { error } = await supabase
                   type="time"
                   value={endTime}
                   onChange={(event) => setEndTime(event.target.value)}
-                  className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                 />
               </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 航班号
               </label>
 
@@ -912,12 +931,12 @@ const { error } = await supabase
                   setFlightNumber(event.target.value.toUpperCase())
                 }
                 placeholder="例如 MM722"
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 关联客户
               </label>
 
@@ -926,7 +945,7 @@ const { error } = await supabase
                 onChange={(event) =>
                   setCustomerId(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="">请选择客户</option>
 
@@ -942,14 +961,14 @@ const { error } = await supabase
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 分配司机
               </label>
 
               <select
                 value={driverId}
                 onChange={(event) => setDriverId(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="">请选择司机</option>
 
@@ -962,14 +981,14 @@ const { error } = await supabase
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 分配车辆
               </label>
 
               <select
                 value={vehicleId}
                 onChange={(event) => setVehicleId(event.target.value)}
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="">请选择车辆</option>
 
@@ -982,7 +1001,7 @@ const { error } = await supabase
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 出发地点
               </label>
 
@@ -992,12 +1011,12 @@ const { error } = await supabase
                   setPickupLocation(event.target.value)
                 }
                 placeholder="例如：中部国际机场 T1"
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 目的地
               </label>
 
@@ -1007,12 +1026,12 @@ const { error } = await supabase
                   setDestination(event.target.value)
                 }
                 placeholder="例如：名古屋万豪酒店"
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 乘客人数
               </label>
 
@@ -1023,12 +1042,12 @@ const { error } = await supabase
                 onChange={(event) =>
                   setPassengerCount(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-gray-800">
+              <label className="mb-1 block text-sm font-extrabold text-gray-700">
                 行李数量
               </label>
 
@@ -1039,7 +1058,7 @@ const { error } = await supabase
                 onChange={(event) =>
                   setLuggageCount(event.target.value)
                 }
-                className="w-full rounded-xl border px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </div>
           </div>
@@ -1049,14 +1068,14 @@ const { error } = await supabase
         !message.includes("冲突订单") &&
         !message.includes("接送机行程已保存") &&
         !message.includes("已经被分配") && (
-        <p className="mt-4 rounded-xl bg-gray-50 p-3 text-sm text-gray-800">{message}</p>
+        <p className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-3 text-sm font-bold text-gray-700">{message}</p>
       )}
 
           {message &&
             (message.includes("已有其他行程") ||
               message.includes("冲突订单") ||
               message.includes("已经被分配")) && (
-              <div className="mb-4 rounded-2xl border-2 border-red-400 bg-red-50 px-4 py-4 shadow-md">
+              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 shadow-sm">
                 <p className="text-base font-extrabold text-red-800">
                   ⚠️ 派单冲突
                 </p>
@@ -1069,7 +1088,7 @@ const { error } = await supabase
           <button
             onClick={saveTrip}
             disabled={saving}
-            className="mt-5 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white disabled:opacity-50"
+            className="mt-5 w-full rounded-2xl bg-emerald-600 py-3 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
           >
             {saving ? "正在保存……" : "保存行程"}
           </button>
@@ -1078,21 +1097,21 @@ const { error } = await supabase
               <button
                 type="button"
                 onClick={cancelEditing}
-                className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-semibold text-gray-700"
+                className="mt-3 w-full rounded-2xl bg-gray-100 px-4 py-3 font-extrabold text-gray-700 transition active:scale-95"
               >
                 取消编辑
               </button>
             )}
         </div>
 
-        <div className="mt-6">
+        <div className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900">
             已保存行程
           </h2>
 
-          <div className="mt-3 rounded-2xl bg-white p-4 shadow">
+          <div className="mt-3 rounded-2xl border border-gray-100 bg-gray-50 p-4">
             <label className="block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">
+              <span className="mb-1 block text-sm font-extrabold text-gray-700">
                 搜索行程
               </span>
               <input
@@ -1100,18 +1119,18 @@ const { error } = await supabase
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="搜索订单编号、客户姓名或航班号"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
             </label>
 
             <label className="mt-3 block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">
+              <span className="mb-1 block text-sm font-extrabold text-gray-700">
                 状态筛选
               </span>
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="all">全部状态</option>
                 <option value="scheduled">待执行</option>
@@ -1122,14 +1141,14 @@ const { error } = await supabase
             </label>
 
                         <label className="mt-3 block">
-              <span className="mb-1 block text-sm font-medium text-gray-700">
+              <span className="mb-1 block text-sm font-extrabold text-gray-700">
                 行程日期
               </span>
               <select
                 value={dateFilter}
                 onChange={(event) => setDateFilter(event.target.value)}
                 aria-label="选择行程日期"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               >
                 <option value="">全部日期</option>
                 {Array.from(
@@ -1154,23 +1173,23 @@ const { error } = await supabase
                   setStatusFilter("all");
                   setDateFilter("");
                 }}
-                className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-semibold text-gray-700"
+                className="mt-3 w-full rounded-2xl bg-gray-100 px-4 py-3 font-extrabold text-gray-700 transition active:scale-95"
               >
                 清除全部筛选
               </button>
             )}
 
-<p className="mt-3 text-sm text-gray-700">
+<p className="mt-3 text-sm font-bold text-gray-500">
               当前显示：{filteredTrips.length} 条，共 {trips.length} 条
             </p>
           </div>
 
           {loading ? (
-            <div className="mt-3 rounded-2xl bg-white p-5 shadow">
+            <div className="mt-3 rounded-2xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
               正在读取行程……
             </div>
           ) : filteredTrips.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-white p-5 text-gray-700 shadow">
+            <div className="mt-3 rounded-2xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
               暂无行程
             </div>
           ) : (
@@ -1178,7 +1197,7 @@ const { error } = await supabase
               {filteredTrips.map((trip) => (
                 <div
                   key={trip.id}
-                  className="rounded-2xl bg-white p-5 shadow"
+                  className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -1244,7 +1263,7 @@ const { error } = await supabase
                         type="button"
                         onClick={() => restoreTrip(trip.id)}
                         disabled={updatingTripId === trip.id}
-                        className="mt-4 w-full rounded-xl bg-green-100 px-4 py-3 font-semibold text-green-700 disabled:opacity-50"
+                        className="mt-4 w-full rounded-2xl bg-green-100 px-4 py-3 font-extrabold text-green-700 transition active:scale-95 disabled:opacity-50"
                       >
                         {updatingTripId === trip.id
                           ? "正在恢复..."
@@ -1258,7 +1277,7 @@ const { error } = await supabase
                         <button
                           type="button"
                           onClick={() => startEditTrip(trip)}
-                          className="mt-4 w-full rounded-xl bg-blue-100 px-4 py-3 font-semibold text-blue-700"
+                          className="mt-4 w-full rounded-2xl bg-blue-100 px-4 py-3 font-extrabold text-blue-700 transition active:scale-95"
                         >
                           编辑这个行程
                         </button>
@@ -1271,7 +1290,7 @@ const { error } = await supabase
                           type="button"
                           onClick={() => cancelTrip(trip.id)}
                           disabled={updatingTripId === trip.id}
-                          className="mt-4 w-full rounded-xl bg-red-100 px-4 py-3 font-semibold text-red-700 disabled:opacity-50"
+                          className="mt-4 w-full rounded-2xl bg-red-100 px-4 py-3 font-extrabold text-red-700 transition active:scale-95 disabled:opacity-50"
                         >
                           {updatingTripId === trip.id
                             ? "正在取消..."
