@@ -211,33 +211,47 @@ export default function VehiclesPage() {
   );
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-4xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-emerald-700">
-              管理员端
-            </p>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-7xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                VEHICLE MANAGEMENT
+              </p>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                车辆资料管理
+              </h1>
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                管理车牌、车型、保险、车检、保养日期和车辆备注。
+              </p>
+            </div>
 
-            <h1 className="text-2xl font-bold text-gray-900">
-              车辆资料管理
-            </h1>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => loadVehicles(selectedId)}
+                className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-extrabold text-emerald-700 transition active:scale-95"
+              >
+                刷新资料
+              </button>
+
+              <a
+                href="/"
+                className="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+              >
+                返回后台
+              </a>
+            </div>
           </div>
-
-          <a
-            href="/"
-            className="rounded-xl bg-white px-4 py-2 font-medium text-gray-800 shadow"
-          >
-            返回首页
-          </a>
-        </div>
+        </section>
 
         {message && (
           <div
-            className={`mt-5 rounded-2xl p-4 ${
+            className={`rounded-3xl border p-4 text-sm font-extrabold shadow-sm ${
               message.includes("成功")
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-red-100 text-red-700"
+                ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                : "border-red-100 bg-red-50 text-red-700"
             }`}
           >
             {message}
@@ -245,90 +259,171 @@ export default function VehiclesPage() {
         )}
 
         {loading ? (
-          <div className="mt-5 rounded-2xl bg-white p-5 text-gray-800 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             正在读取车辆资料……
           </div>
         ) : (
-          <div className="mt-5 grid gap-5 md:grid-cols-[260px_1fr]">
-            <section className="rounded-2xl bg-white p-4 shadow">
-              <h2 className="font-bold text-gray-900">
-                车辆列表（{vehicles.length}台）
-              </h2>
+          <>
+            <section className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: "车辆总数",
+                  value: vehicles.length,
+                  note: "已登记车辆",
+                  tone: "emerald",
+                },
+                {
+                  title: "使用中车辆",
+                  value: vehicles.filter((vehicle) => vehicle.status === "active").length,
+                  note: "状态 active",
+                  tone: "blue",
+                },
+                {
+                  title: "当前编辑",
+                  value: selectedVehicle?.vehicle_code || "-",
+                  note: selectedVehicle?.plate_number || "未选择车辆",
+                  tone: "amber",
+                },
+              ].map((card) => {
+                const colorClass =
+                  card.tone === "emerald"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : card.tone === "blue"
+                      ? "bg-blue-50 text-blue-700"
+                      : card.tone === "amber"
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-gray-50 text-gray-700";
 
-              <div className="mt-4 space-y-3">
-                {vehicles.map((vehicle) => (
-                  <button
-                    key={vehicle.id}
-                    type="button"
-                    onClick={() => selectVehicle(vehicle)}
-                    className={`w-full rounded-xl border p-4 text-left ${
-                      selectedId === vehicle.id
-                        ? "border-emerald-500 bg-emerald-50"
-                        : "border-gray-200 bg-white"
-                    }`}
+                return (
+                  <div
+                    key={card.title}
+                    className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm"
                   >
-                    <p className="font-bold text-gray-900">
-                      {vehicle.vehicle_code} · {vehicle.model}
+                    <p className="text-xs font-extrabold text-gray-400">
+                      {card.title}
                     </p>
-
-                    <p className="mt-1 text-sm text-gray-700">
-                      {vehicle.plate_number}
+                    <p className="mt-2 text-3xl font-extrabold text-gray-900">
+                      {card.value}
                     </p>
-
-                    <p className="mt-1 text-sm text-gray-600">
-                      状态：{vehicle.status}
-                    </p>
-                  </button>
-                ))}
-              </div>
+                    <span
+                      className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-extrabold ${colorClass}`}
+                    >
+                      {card.note}
+                    </span>
+                  </div>
+                );
+              })}
             </section>
 
-            <section className="rounded-2xl bg-white p-5 shadow">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">
-                  编辑车辆资料
-                </h2>
+            <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+              <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-400">
+                      VEHICLE LIST
+                    </p>
+                    <h2 className="mt-1 text-lg font-extrabold text-gray-900">
+                      车辆列表
+                    </h2>
+                  </div>
 
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-700">
-                  {selectedVehicle?.vehicle_code || "未选择"}
-                </span>
-              </div>
-
-              <div className="mt-5 space-y-4">
-                <label className="block">
-                  <span className="font-medium text-gray-800">
-                    车牌号码
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+                    {vehicles.length} 台
                   </span>
+                </div>
 
-                  <input
-                    value={form.plate_number}
-                    onChange={(event) =>
-                      updateField(
-                        "plate_number",
-                        event.target.value
-                      )
-                    }
-                    className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
-                  />
-                </label>
+                <div className="mt-4 max-h-[640px] space-y-3 overflow-y-auto pr-1">
+                  {vehicles.map((vehicle) => (
+                    <button
+                      key={vehicle.id}
+                      type="button"
+                      onClick={() => selectVehicle(vehicle)}
+                      className={`w-full rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
+                        selectedId === vehicle.id
+                          ? "border-emerald-400 bg-emerald-50 shadow-sm"
+                          : "border-gray-100 bg-white hover:border-emerald-100 hover:bg-emerald-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-extrabold ${
+                            selectedId === vehicle.id
+                              ? "bg-emerald-600 text-white"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          车
+                        </span>
 
-                <label className="block">
-                  <span className="font-medium text-gray-800">
-                    车型
+                        <div className="min-w-0">
+                          <p className="truncate font-extrabold text-gray-900">
+                            {vehicle.vehicle_code} · {vehicle.model}
+                          </p>
+
+                          <p className="mt-1 truncate text-xs font-bold text-gray-500">
+                            {vehicle.plate_number}
+                          </p>
+
+                          <p className="mt-1 text-xs font-bold text-gray-400">
+                            状态：{vehicle.status}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-400">
+                      EDIT VEHICLE
+                    </p>
+                    <h2 className="mt-1 text-lg font-extrabold text-gray-900">
+                      编辑车辆资料
+                    </h2>
+                  </div>
+
+                  <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-sm font-extrabold text-emerald-700">
+                    {selectedVehicle?.vehicle_code || "未选择"}
                   </span>
+                </div>
 
-                  <input
-                    value={form.model}
-                    onChange={(event) =>
-                      updateField("model", event.target.value)
-                    }
-                    className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
-                  />
-                </label>
-
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="mt-5 grid gap-4 lg:grid-cols-2">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      车牌号码
+                    </span>
+
+                    <input
+                      value={form.plate_number}
+                      onChange={(event) =>
+                        updateField(
+                          "plate_number",
+                          event.target.value
+                        )
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      车型
+                    </span>
+
+                    <input
+                      value={form.model}
+                      onChange={(event) =>
+                        updateField("model", event.target.value)
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="text-sm font-extrabold text-gray-700">
                       颜色
                     </span>
 
@@ -340,12 +435,12 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       当前公里数
                     </span>
 
@@ -360,14 +455,14 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-4 lg:grid-cols-3">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       保险到期日
                     </span>
 
@@ -380,12 +475,12 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       车检到期日
                     </span>
 
@@ -398,31 +493,12 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
-                    />
-                  </label>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="font-medium text-gray-800">
-                      ETC卡号
-                    </span>
-
-                    <input
-                      value={form.etc_card_number}
-                      onChange={(event) =>
-                        updateField(
-                          "etc_card_number",
-                          event.target.value
-                        )
-                      }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       燃料类型
                     </span>
 
@@ -435,14 +511,31 @@ export default function VehiclesPage() {
                         )
                       }
                       placeholder="例如：汽油、柴油"
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-4 lg:grid-cols-3">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      ETC卡号
+                    </span>
+
+                    <input
+                      value={form.etc_card_number}
+                      onChange={(event) =>
+                        updateField(
+                          "etc_card_number",
+                          event.target.value
+                        )
+                      }
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="text-sm font-extrabold text-gray-700">
                       上次保养日期
                     </span>
 
@@ -455,12 +548,12 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       下次保养日期
                     </span>
 
@@ -473,13 +566,13 @@ export default function VehiclesPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
                 </div>
 
-                <label className="block">
-                  <span className="font-medium text-gray-800">
+                <label className="mt-4 block">
+                  <span className="text-sm font-extrabold text-gray-700">
                     备注
                   </span>
 
@@ -489,25 +582,30 @@ export default function VehiclesPage() {
                       updateField("notes", event.target.value)
                     }
                     rows={4}
-                    className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                   />
                 </label>
 
-                <button
-                  type="button"
-                  onClick={saveVehicle}
-                  disabled={saving || !selectedId}
-                  className="w-full rounded-xl bg-emerald-600 p-3 font-bold text-white disabled:opacity-50"
-                >
-                  {saving
-                    ? "正在保存……"
-                    : "保存车辆资料"}
-                </button>
-              </div>
-            </section>
-          </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-bold text-gray-400">
+                    保存后，首页提醒、车辆资料和车检信息会同步更新。
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={saveVehicle}
+                    disabled={saving || !selectedId}
+                    className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                  >
+                    {saving
+                      ? "正在保存……"
+                      : "保存车辆资料"}
+                  </button>
+                </div>
+              </section>
+            </div>
+          </>
         )}
       </div>
     </main>
-  );
-}
+  );}
