@@ -37,6 +37,22 @@ type DashboardTrip = {
   status: string | null;
 };
 
+type TodayDriverTask = {
+  id: string;
+  trip_number: string | null;
+  trip_date: string | null;
+  start_time: string | null;
+  pickup_location: string | null;
+  destination: string | null;
+  status: string | null;
+  driver_id: string | null;
+  vehicles: {
+    vehicle_code: string | null;
+    model: string | null;
+    plate_number: string | null;
+  } | null;
+};
+
 
 type DashboardReminder = {
   id: string;
@@ -102,6 +118,7 @@ export default function Home() {
   const [reminderCount, setReminderCount] = useState(0);
   const [customerCount, setCustomerCount] = useState(0);
   const [recentTrips, setRecentTrips] = useState<DashboardTrip[]>([]);
+  const [todayDriverTasks, setTodayDriverTasks] = useState<TodayDriverTask[]>([]);
   const [dashboardReminders, setDashboardReminders] = useState<DashboardReminder[]>([]);
   const [todayOperationStats, setTodayOperationStats] =
     useState<TodayOperationStats>({
@@ -629,6 +646,42 @@ export default function Home() {
     setTodayOperationStats(stats);
   }
 
+  async function loadTodayDriverTasks() {
+    const todayText = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+
+    const { data, error } = await supabase
+      .from("trips")
+      .select(`
+        id,
+        trip_number,
+        trip_date,
+        start_time,
+        pickup_location,
+        destination,
+        status,
+        driver_id,
+        vehicles (
+          vehicle_code,
+          model,
+          plate_number
+        )
+      `)
+      .eq("trip_date", todayText)
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      setDatabaseError(`读取今日司机任务失败：${error.message}`);
+      return;
+    }
+
+    setTodayDriverTasks((data as TodayDriverTask[]) ?? []);
+  }
+
   async function loadMonthlySystemStats() {
     const todayText = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Tokyo",
@@ -689,6 +742,7 @@ export default function Home() {
       loadRecentTrips(),
       loadDashboardReminders(),
       loadTodayOperationStats(),
+      loadTodayDriverTasks(),
       loadMonthlySystemStats(),
     ]);
 
@@ -858,6 +912,7 @@ export default function Home() {
                 reminderCount={reminderCount}
                 customerCount={customerCount}
                 recentTrips={recentTrips}
+                todayDriverTasks={todayDriverTasks}
                 dashboardReminders={dashboardReminders}
                 todayOperationStats={todayOperationStats}
                 monthlySystemStats={monthlySystemStats}
@@ -931,6 +986,7 @@ function AdminDashboard({
   reminderCount,
   customerCount,
   recentTrips,
+  todayDriverTasks,
   dashboardReminders,
   todayOperationStats,
   monthlySystemStats,
@@ -944,6 +1000,7 @@ function AdminDashboard({
   reminderCount: number;
   customerCount: number;
   recentTrips: DashboardTrip[];
+  todayDriverTasks: TodayDriverTask[];
   dashboardReminders: DashboardReminder[];
   todayOperationStats: TodayOperationStats;
   monthlySystemStats: MonthlySystemStats;
@@ -1168,6 +1225,11 @@ function AdminDashboard({
             />
           </div>
         </section>
+
+        <TodayDriverTaskBoard
+          drivers={drivers}
+          todayDriverTasks={todayDriverTasks}
+        />
 
         <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
           <DashboardStat
@@ -1549,6 +1611,163 @@ function AdminDashboard({
 
       </div>
     </div>
+  );
+}
+
+function TodayDriverTaskBoard({
+  drivers,
+  todayDriverTasks,
+}: {
+  drivers: Driver[];
+  todayDriverTasks: TodayDriverTask[];
+}) {
+  const activeDrivers = drivers.filter((driver) => driver.status !== "inactive");
+  const unassignedTasks = todayDriverTasks.filter((task) => !task.driver_id);
+
+  return (
+    <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-extrabold text-gray-900">
+            今日司机任务表
+          </h3>
+
+          <p className="mt-1 text-sm font-bold text-gray-500">
+            按司机查看今天的派单、时间、路线、车辆和状态
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => loadDashboardPage("/trips")}
+          className="w-fit rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-extrabold text-emerald-700 transition active:scale-95"
+        >
+          管理今日订单
+        </button>
+      </div>
+
+      <div className="mt-4 grid gap-3 xl:grid-cols-2">
+        {activeDrivers.map((driver) => {
+          const tasks = todayDriverTasks.filter(
+            (task) => task.driver_id === driver.id
+          );
+
+          return (
+            <div
+              key={driver.id}
+              className="rounded-3xl border border-gray-100 bg-gray-50 p-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-extrabold text-gray-900">
+                    {driver.driver_code} · {driver.name}
+                  </p>
+
+                  <p className="mt-1 text-xs font-bold text-gray-400">
+                    今日任务：{tasks.length} 单
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-gray-500">
+                  司机
+                </span>
+              </div>
+
+              {tasks.length === 0 ? (
+                <div className="mt-3 rounded-2xl bg-white p-4 text-sm font-bold text-gray-400">
+                  今日暂无任务
+                </div>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {tasks.map((task) => (
+                    <button
+                      key={task.id}
+                      type="button"
+                      onClick={() => loadDashboardPage("/trips")}
+                      className="w-full rounded-2xl border border-gray-100 bg-white p-4 text-left transition hover:border-emerald-100 hover:bg-emerald-50 active:scale-[0.99]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold text-gray-900">
+                            {formatAdminTripTime(task.start_time)} · {task.trip_number || "未填写订单号"}
+                          </p>
+
+                          <p className="mt-2 line-clamp-2 text-sm font-bold text-gray-700">
+                            {task.pickup_location || "未填写出发地"}
+                            <span className="mx-2 text-gray-300">→</span>
+                            {task.destination || "未填写目的地"}
+                          </p>
+
+                          <p className="mt-2 text-xs font-bold text-gray-400">
+                            车辆：{task.vehicles?.vehicle_code || "未分配"}
+                            {task.vehicles?.plate_number
+                              ? ` · ${task.vehicles.plate_number}`
+                              : ""}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold ${adminTripStatusClass(task.status)}`}
+                        >
+                          {adminTripStatusText(task.status)}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {activeDrivers.length === 0 && (
+          <div className="rounded-2xl bg-gray-50 p-4 text-sm font-bold text-gray-500">
+            暂无司机资料，请先添加司机。
+          </div>
+        )}
+
+        {unassignedTasks.length > 0 && (
+          <div className="rounded-3xl border border-amber-100 bg-amber-50 p-4 xl:col-span-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-extrabold text-amber-800">
+                  未分配司机订单
+                </p>
+
+                <p className="mt-1 text-xs font-bold text-amber-700">
+                  这些订单今天需要处理，但还没有分配司机
+                </p>
+              </div>
+
+              <span className="rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold text-amber-700">
+                {unassignedTasks.length} 单
+              </span>
+            </div>
+
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {unassignedTasks.map((task) => (
+                <button
+                  key={task.id}
+                  type="button"
+                  onClick={() => loadDashboardPage("/trips")}
+                  className="rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
+                >
+                  <p className="text-sm font-extrabold text-gray-900">
+                    {formatAdminTripTime(task.start_time)} · {task.trip_number || "未填写订单号"}
+                  </p>
+
+                  <p className="mt-2 text-sm font-bold text-gray-600">
+                    {task.pickup_location || "未填写出发地"}
+                    <span className="mx-2 text-gray-300">→</span>
+                    {task.destination || "未填写目的地"}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
