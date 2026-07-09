@@ -214,39 +214,45 @@ export default function CashCollectionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-emerald-700">
-              司机端
-            </p>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                DRIVER APP
+              </p>
 
-            <h1 className="text-2xl font-bold text-gray-900">
-              代收现金
-            </h1>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                代收现金
+              </h1>
+
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                登记客人现金支付金额，并同步到管理员费用审核页面。
+              </p>
+            </div>
+
+            <a
+              href="/driver-trips"
+              className="shrink-0 rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+            >
+              返回司机首页
+            </a>
           </div>
-
-          <a
-            href="/"
-            className="rounded-xl bg-white px-4 py-2 font-medium text-gray-800 shadow"
-          >
-            返回首页
-          </a>
-        </div>
+        </section>
 
         {driver && (
-          <div className="mt-5 rounded-3xl bg-emerald-500 p-5 text-white shadow">
+          <section className="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-500 p-5 text-white shadow-sm">
             <p className="text-sm opacity-90">当前司机</p>
 
             <p className="mt-2 text-xl font-bold">
               {driver.driver_code} · {driver.name}
             </p>
-          </div>
+          </section>
         )}
 
-        <div className="mt-5 rounded-3xl bg-white p-5 shadow">
-          <h2 className="font-bold text-gray-900">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-extrabold text-gray-900">
             登记代收金额
           </h2>
 
@@ -255,7 +261,7 @@ export default function CashCollectionPage() {
           ) : (
             <div className="mt-4 space-y-4">
               <div>
-                <label className="mb-1 block font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   关联行程
                 </label>
 
@@ -264,7 +270,7 @@ export default function CashCollectionPage() {
                   onChange={(event) =>
                     setSelectedTripId(event.target.value)
                   }
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                 >
                   <option value="">不关联行程</option>
 
@@ -277,14 +283,14 @@ export default function CashCollectionPage() {
               </div>
 
               <div>
-                <label className="mb-1 block font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   币种
                 </label>
 
                 <select
                   value={currency}
                   onChange={(event) => setCurrency(event.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                 >
                   <option value="JPY">日元 JPY</option>
                   <option value="CNY">人民币 CNY</option>
@@ -292,7 +298,7 @@ export default function CashCollectionPage() {
               </div>
 
               <div>
-                <label className="mb-1 block font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   代收金额
                 </label>
 
@@ -302,12 +308,12 @@ export default function CashCollectionPage() {
                   type="number"
                   min="1"
                   placeholder="例如：10000"
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   备注
                 </label>
 
@@ -316,12 +322,12 @@ export default function CashCollectionPage() {
                   onChange={(event) => setNotes(event.target.value)}
                   placeholder="例如：机场接机订单，客人现金支付"
                   rows={3}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
                 />
               </div>
 
               {message && (
-                <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-700">
+                <p className="rounded-2xl border border-gray-100 bg-gray-50 p-3 text-sm font-bold text-gray-700">
                   {message}
                 </p>
               )}
@@ -329,56 +335,62 @@ export default function CashCollectionPage() {
               <button
                 onClick={saveCashCollection}
                 disabled={saving}
-                className="w-full rounded-xl bg-emerald-500 py-3 font-bold text-white disabled:opacity-50"
+                className="w-full rounded-2xl bg-emerald-600 py-3 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 {saving ? "正在保存……" : "保存代收现金"}
               </button>
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="mt-6">
-          <h2 className="font-bold text-gray-900">
-            最近代收记录
-          </h2>
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <h2 className="text-lg font-extrabold text-gray-900">
+              最近代收记录
+            </h2>
+
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-extrabold text-gray-600">
+              {records.length} 条
+            </span>
+          </div>
 
           {records.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-white p-5 text-gray-700 shadow">
+            <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-5 text-sm font-bold text-gray-500">
               暂无代收现金记录
             </div>
           ) : (
-            <div className="mt-3 space-y-3">
+            <div className="mt-4 space-y-3">
               {records.map((record) => (
                 <div
                   key={record.id}
-                  className="rounded-2xl bg-white p-5 shadow"
+                  className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-xl font-bold text-gray-900">
+                    <p className="text-2xl font-extrabold text-gray-900">
                       {moneyText(record.amount, record.currency)}
                     </p>
 
-                    <span className="text-xs text-gray-600">
+                    <span className="text-right text-xs font-bold text-gray-500">
                       {formatDateTime(record.created_at)}
                     </span>
                   </div>
 
-                  <p className="mt-3 text-sm text-gray-700">
+                  <p className="mt-3 text-sm font-bold text-gray-600">
                     备注：{record.notes || "无"}
                   </p>
 
-                  <p className="mt-1 text-sm text-gray-700">
+                  <p className="mt-1 text-sm font-bold text-gray-600">
                     车辆：{record.vehicles?.vehicle_code || "未关联"}
                   </p>
 
-                  <p className="mt-1 text-xs text-gray-600">
+                  <p className="mt-1 text-xs font-bold text-gray-400">
                     行程：{record.trips?.trip_number || "未关联"}
                   </p>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </main>
   );
