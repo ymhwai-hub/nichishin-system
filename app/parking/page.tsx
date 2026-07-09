@@ -277,42 +277,51 @@ export default function ParkingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-emerald-600">司机端</p>
-            <h1 className="text-2xl font-bold text-gray-900">
-              停车地点登记
-            </h1>
-          </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                DRIVER APP
+              </p>
 
-          <a
-            href={tripIdFromUrl ? `/driver-trips/${tripIdFromUrl}` : "/"}
-            className="rounded-xl bg-white px-4 py-2 text-sm text-gray-700 shadow"
-          >
-            {tripIdFromUrl ? "返回订单" : "返回首页"}
-          </a>
-        </div>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                停车地点登记
+              </h1>
+
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                登记到达、停车、离开位置，并保存GPS坐标和公里数。
+              </p>
+            </div>
+
+            <a
+              href={tripIdFromUrl ? `/driver-trips/${tripIdFromUrl}` : "/"}
+              className="shrink-0 rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+            >
+              {tripIdFromUrl ? "返回订单" : "返回"}
+            </a>
+          </div>
+        </section>
 
         {driver && (
-          <div className="mt-5 rounded-3xl bg-emerald-500 p-5 text-white shadow">
+          <section className="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-500 p-5 text-white shadow-sm">
             <p className="text-sm opacity-80">当前司机</p>
             <p className="mt-2 text-xl font-bold">
               {driver.driver_code} · {driver.name}
             </p>
-          </div>
+          </section>
         )}
 
-        <div className="mt-5 rounded-3xl bg-white p-5 shadow">
-          <h2 className="font-bold text-gray-900">登记当前位置</h2>
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-extrabold text-gray-900">登记当前位置</h2>
 
           {loading ? (
             <p className="mt-4 text-gray-500">正在读取资料……</p>
           ) : (
             <div className="mt-4 space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   关联行程
                 </label>
 
@@ -321,7 +330,7 @@ export default function ParkingPage() {
                   onChange={(event) =>
                     setSelectedTripId(event.target.value)
                   }
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
                 >
                   <option value="">不关联行程</option>
 
@@ -334,14 +343,14 @@ export default function ParkingPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-800">
+                <label className="mb-1 block text-sm font-extrabold text-gray-700">
                   登记类型
                 </label>
 
                 <select
                   value={eventType}
                   onChange={(event) => setEventType(event.target.value)}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                  className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
                 >
                   <option value="arrival">到达地点</option>
                   <option value="parking">停车地点</option>
@@ -353,7 +362,7 @@ export default function ParkingPage() {
                 value={locationName}
                 onChange={(event) => setLocationName(event.target.value)}
                 placeholder="地点名称，例如：名古屋万豪酒店"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
               />
 
               <input
@@ -361,19 +370,19 @@ export default function ParkingPage() {
                 onChange={(event) => setMileage(event.target.value)}
                 type="number"
                 placeholder="当前公里数，可不填"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500"
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-400 focus:bg-white"
               />
 
               <button
                 onClick={getCurrentLocation}
                 disabled={locating}
-                className="w-full rounded-xl bg-blue-500 py-3 font-bold text-white disabled:opacity-50"
+                className="w-full rounded-2xl bg-blue-600 py-3 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 {locating ? "正在定位……" : "获取当前位置"}
               </button>
 
               {latitude && longitude && (
-                <div className="rounded-xl bg-gray-50 p-4 text-sm font-medium text-gray-800">
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm font-bold text-gray-700">
                   <p>纬度：{latitude}</p>
                   <p className="mt-1">经度：{longitude}</p>
 
@@ -384,7 +393,7 @@ export default function ParkingPage() {
                   )}
 
                   {accuracy && Number(accuracy) > 200 && (
-                    <div className="mt-3 rounded-xl bg-amber-50 p-3 text-amber-700">
+                    <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 p-3 font-bold text-amber-700">
                       当前定位可能有偏差。建议再点一次“获取当前位置”，或者在地点名称里手动填写准确地点。
                     </div>
                   )}
@@ -393,7 +402,7 @@ export default function ParkingPage() {
                     href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 block rounded-xl bg-white px-4 py-3 text-center font-bold text-blue-600 shadow-sm"
+                    className="mt-3 block rounded-2xl border border-blue-100 bg-white px-4 py-3 text-center font-extrabold text-blue-600 shadow-sm transition active:scale-95"
                   >
                     用 Google Maps 确认位置
                   </a>
@@ -401,7 +410,7 @@ export default function ParkingPage() {
               )}
 
               {message && (
-                <p className="rounded-xl bg-gray-50 p-3 text-sm font-medium text-gray-800">
+                <p className="rounded-2xl border border-gray-100 bg-gray-50 p-3 text-sm font-bold text-gray-700">
                   {message}
                 </p>
               )}
@@ -409,64 +418,64 @@ export default function ParkingPage() {
               <button
                 onClick={saveParkingRecord}
                 disabled={saving}
-                className="w-full rounded-xl bg-emerald-500 py-3 font-bold text-white disabled:opacity-50"
+                className="w-full rounded-2xl bg-emerald-600 py-3 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 {saving ? "正在保存……" : "保存停车地点"}
               </button>
             </div>
           )}
-        </div>
+        </section>
 
-        <div className="mt-6">
-          <h2 className="font-bold text-gray-900">最近登记记录</h2>
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4"><h2 className="text-lg font-extrabold text-gray-900">最近登记记录</h2><span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-extrabold text-gray-600">{records.length} 条</span></div>
 
           {records.length === 0 ? (
-            <div className="mt-3 rounded-2xl bg-white p-5 text-gray-700 shadow">
+            <div className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-5 text-sm font-bold text-gray-500">
               暂无停车地点记录
             </div>
           ) : (
-            <div className="mt-3 space-y-3">
+            <div className="mt-4 space-y-3">
               {records.map((record) => (
                 <div
                   key={record.id}
-                  className="rounded-2xl bg-white p-5 shadow"
+                  className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <p className="font-bold text-gray-900">
                       {eventTypeText(record.event_type)}
                     </p>
 
-                    <span className="text-xs text-gray-600">
+                    <span className="text-right text-xs font-bold text-gray-500">
                       {formatDateTime(record.recorded_at)}
                     </span>
                   </div>
 
-                  <p className="mt-3 text-gray-700">
+                  <p className="mt-3 font-extrabold text-gray-900">
                     {record.location_name || "未填写地点名称"}
                   </p>
 
-                  <p className="mt-2 text-sm text-gray-700">
+                  <p className="mt-2 text-sm font-bold text-gray-600">
                     GPS：{record.latitude}, {record.longitude}
                   </p>
 
                   {record.mileage !== null && (
-                    <p className="mt-1 text-sm text-gray-700">
+                    <p className="mt-1 text-sm font-bold text-gray-600">
                       公里数：{record.mileage} km
                     </p>
                   )}
 
-                  <p className="mt-1 text-sm text-gray-700">
+                  <p className="mt-1 text-sm font-bold text-gray-600">
                     车辆：{record.vehicles?.vehicle_code || "未关联"}
                   </p>
 
-                  <p className="mt-1 text-xs text-gray-600">
+                  <p className="mt-1 text-xs font-bold text-gray-400">
                     行程：{record.trips?.trip_number || "未关联"}
                   </p>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </main>
   );
