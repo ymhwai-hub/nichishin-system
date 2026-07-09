@@ -679,7 +679,7 @@ export default function Home() {
       return;
     }
 
-    setTodayDriverTasks((data as TodayDriverTask[]) ?? []);
+    setTodayDriverTasks((data as unknown as TodayDriverTask[]) ?? []);
   }
 
   async function loadMonthlySystemStats() {
@@ -1623,6 +1623,12 @@ function TodayDriverTaskBoard({
 }) {
   const activeDrivers = drivers.filter((driver) => driver.status !== "inactive");
   const unassignedTasks = todayDriverTasks.filter((task) => !task.driver_id);
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   return (
     <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -1639,7 +1645,7 @@ function TodayDriverTaskBoard({
 
         <button
           type="button"
-          onClick={() => loadDashboardPage("/trips")}
+          onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
           className="w-fit rounded-2xl bg-emerald-50 px-4 py-2 text-sm font-extrabold text-emerald-700 transition active:scale-95"
         >
           管理今日订单
@@ -1683,7 +1689,7 @@ function TodayDriverTaskBoard({
                     <button
                       key={task.id}
                       type="button"
-                      onClick={() => loadDashboardPage("/trips")}
+                      onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
                       className="w-full rounded-2xl border border-gray-100 bg-white p-4 text-left transition hover:border-emerald-100 hover:bg-emerald-50 active:scale-[0.99]"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -1749,7 +1755,7 @@ function TodayDriverTaskBoard({
                 <button
                   key={task.id}
                   type="button"
-                  onClick={() => loadDashboardPage("/trips")}
+                  onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
                   className="rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
                 >
                   <p className="text-sm font-extrabold text-gray-900">

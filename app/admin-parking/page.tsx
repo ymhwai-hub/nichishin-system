@@ -69,7 +69,7 @@ export default function AdminParkingPage() {
         return;
       }
 
-      setRecords((data as ParkingRecord[]) ?? []);
+      setRecords((data as unknown as ParkingRecord[]) ?? []);
       setLoading(false);
     }
 

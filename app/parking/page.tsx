@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
@@ -44,7 +44,7 @@ type ParkingRecord = {
   } | null;
 };
 
-export default function ParkingPage() {
+function ParkingPageContent() {
   const searchParams = useSearchParams();
   const tripIdFromUrl = searchParams.get("tripId") ?? "";
 
@@ -92,7 +92,7 @@ export default function ParkingPage() {
       return;
     }
 
-    setRecords((data as ParkingRecord[]) ?? []);
+    setRecords((data as unknown as ParkingRecord[]) ?? []);
   }
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function ParkingPage() {
         return;
       }
 
-      const loadedTrips = (tripData as Trip[]) ?? [];
+      const loadedTrips = (tripData as unknown as Trip[]) ?? [];
       setTrips(loadedTrips);
 
       if (
@@ -478,5 +478,22 @@ export default function ParkingPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+
+export default function ParkingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+          <div className="mx-auto max-w-3xl rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
+            正在打开停车登记页面……
+          </div>
+        </main>
+      }
+    >
+      <ParkingPageContent />
+    </Suspense>
   );
 }

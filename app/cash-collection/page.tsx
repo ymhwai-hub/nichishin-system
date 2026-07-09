@@ -84,7 +84,7 @@ export default function CashCollectionPage() {
       return;
     }
 
-    setRecords((data as CashRecord[]) ?? []);
+    setRecords((data as unknown as CashRecord[]) ?? []);
   }
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function CashCollectionPage() {
         return;
       }
 
-      const loadedTrips = (tripData as Trip[]) ?? [];
+      const loadedTrips = (tripData as unknown as Trip[]) ?? [];
       setTrips(loadedTrips);
 
       if (loadedTrips.length > 0) {

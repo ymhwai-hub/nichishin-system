@@ -34,6 +34,7 @@ type Trip = {
   end_time: string | null;
   pickup_location: string | null;
   destination: string | null;
+  flight_number: string | null;
   passenger_count: number;
   luggage_count: number;
   status: string;
@@ -514,7 +515,7 @@ export default function TripsPage() {
       `${endDate}T${endTime}:00+09:00`;
 
     const scheduleConflict =
-      await getScheduleConflictMessage(startDateTime);
+      await getScheduleConflictMessage(startDateTime, endDateTime);
 
     const conflictWarning =
       scheduleConflict?.allowSave
@@ -594,7 +595,7 @@ const { error } = await supabase.from("trips").insert({
   }
 
   function startEditTrip(trip: Trip) {
-    const editTime = new Date(trip.start_time).toLocaleTimeString(
+    const editTime = new Date(trip.start_time || "").toLocaleTimeString(
       "en-GB",
       {
         hour: "2-digit",
@@ -1163,21 +1164,17 @@ const { error } = await supabase
               </select>
             </label>
 
-            {(searchTerm ||
-              statusFilter !== "all" ||
-              dateFilter) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                  setDateFilter("");
-                }}
-                className="mt-3 w-full rounded-2xl bg-gray-100 px-4 py-3 font-extrabold text-gray-700 transition active:scale-95"
-              >
-                清除全部筛选
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+                setDateFilter("");
+              }}
+              className="mt-3 w-full rounded-2xl bg-gray-100 px-4 py-3 font-extrabold text-gray-700 transition active:scale-95"
+            >
+              清除全部筛选
+            </button>
 
 <p className="mt-3 text-sm font-bold text-gray-500">
               当前显示：{filteredTrips.length} 条，共 {trips.length} 条
