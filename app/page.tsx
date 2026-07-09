@@ -45,6 +45,8 @@ type TodayDriverTask = {
   pickup_location: string | null;
   destination: string | null;
   status: string | null;
+  trip_type: string | null;
+  flight_number: string | null;
   driver_id: string | null;
   vehicles: {
     vehicle_code: string | null;
@@ -664,6 +666,8 @@ export default function Home() {
         pickup_location,
         destination,
         status,
+        trip_type,
+        flight_number,
         driver_id,
         vehicles (
           vehicle_code,
@@ -1226,6 +1230,8 @@ function AdminDashboard({
           </div>
         </section>
 
+        <TodayOrderAlert todayDriverTasks={todayDriverTasks} />
+
         <TodayDriverTaskBoard
           drivers={drivers}
           todayDriverTasks={todayDriverTasks}
@@ -1616,6 +1622,106 @@ function AdminDashboard({
 
       </div>
     </div>
+  );
+}
+
+function TodayOrderAlert({
+  todayDriverTasks,
+}: {
+  todayDriverTasks: TodayDriverTask[];
+}) {
+  const now = new Date();
+
+  const missingFlightTrips = todayDriverTasks.filter(
+    (task) =>
+      (task.trip_type === "airport_pickup" ||
+        task.trip_type === "airport_dropoff") &&
+      !task.flight_number
+  );
+
+  const notStartedTrips = todayDriverTasks.filter((task) => {
+    if (task.status !== "scheduled" || !task.start_time) return false;
+
+    const start = new Date(task.start_time);
+
+    if (Number.isNaN(start.getTime())) return false;
+
+    return start.getTime() < now.getTime();
+  });
+
+  if (missingFlightTrips.length === 0 && notStartedTrips.length === 0) {
+    return null;
+  }
+
+  const todayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  return (
+    <section className="rounded-3xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-extrabold tracking-[0.2em] text-amber-600">
+            ORDER ALERT
+          </p>
+
+          <h3 className="mt-2 text-lg font-extrabold text-amber-900">
+            今日订单需要确认
+          </h3>
+
+          <p className="mt-1 text-sm font-bold text-amber-700">
+            缺少航班号：{missingFlightTrips.length} 单 · 已过出发时间未开始：{notStartedTrips.length} 单
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
+          className="w-fit rounded-2xl bg-amber-600 px-5 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+        >
+          查看今日订单
+        </button>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        {missingFlightTrips.slice(0, 3).map((task) => (
+          <button
+            key={`flight-${task.id}`}
+            type="button"
+            onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
+            className="rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
+          >
+            <p className="text-sm font-extrabold text-gray-900">
+              缺少航班号 · {task.trip_number || "未填写订单号"}
+            </p>
+
+            <p className="mt-2 text-sm font-bold text-gray-600">
+              {formatAdminTripTime(task.start_time)} · {task.pickup_location || "未填写出发地"}
+            </p>
+          </button>
+        ))}
+
+        {notStartedTrips.slice(0, 3).map((task) => (
+          <button
+            key={`late-${task.id}`}
+            type="button"
+            onClick={() => loadDashboardPage(`/trips?date=${todayKey}`)}
+            className="rounded-2xl bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
+          >
+            <p className="text-sm font-extrabold text-gray-900">
+              已过时间未开始 · {task.trip_number || "未填写订单号"}
+            </p>
+
+            <p className="mt-2 text-sm font-bold text-gray-600">
+              {formatAdminTripTime(task.start_time)} · {task.pickup_location || "未填写出发地"}
+            </p>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
