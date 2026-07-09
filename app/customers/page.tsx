@@ -214,33 +214,59 @@ export default function CustomersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-emerald-700">
-              管理员端
-            </p>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-7xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                CUSTOMER MANAGEMENT
+              </p>
 
-            <h1 className="text-2xl font-bold text-gray-900">
-              客户资料管理
-            </h1>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                客户资料管理
+              </h1>
+
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                管理散客、导游、旅行社、企业客户和VIP客户资料。
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={startNewCustomer}
+                className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-extrabold text-emerald-700 transition active:scale-95"
+              >
+                新增客户
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-2 text-sm font-extrabold text-gray-700 transition active:scale-95"
+              >
+                刷新页面
+              </button>
+
+              <a
+                href="/"
+                className="rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+              >
+                返回后台
+              </a>
+            </div>
           </div>
-
-          <a
-            href="/"
-            className="rounded-xl bg-white px-4 py-2 font-medium text-gray-800 shadow"
-          >
-            返回首页
-          </a>
-        </div>
+        </section>
 
         {message && (
           <div
-            className={`mt-5 rounded-2xl p-4 ${
+            className={`rounded-3xl border p-4 text-sm font-extrabold shadow-sm ${
               message.includes("成功")
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-red-100 text-red-700"
+                ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                : "border-red-100 bg-red-50 text-red-700"
             }`}
           >
             {message}
@@ -248,104 +274,174 @@ export default function CustomersPage() {
         )}
 
         {loading ? (
-          <div className="mt-5 rounded-2xl bg-white p-5 text-gray-800 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             正在读取客户资料……
           </div>
         ) : (
-          <div className="mt-5 grid gap-5 md:grid-cols-[280px_1fr]">
-            <section className="rounded-2xl bg-white p-4 shadow">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="font-bold text-gray-900">
-                  客户列表（{customers.length}人）
-                </h2>
-
-                <button
-                  type="button"
-                  onClick={startNewCustomer}
-                  className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white"
-                >
-                  新增
-                </button>
-              </div>
-
-              {customers.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-600">
-                  暂无客户，请点击“新增”。
+          <>
+            <section className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <p className="text-xs font-extrabold text-gray-400">
+                  客户总数
                 </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {customers.map((customer) => (
-                    <button
-                      key={customer.id}
-                      type="button"
-                      onClick={() => selectCustomer(customer)}
-                      className={`w-full rounded-xl border p-4 text-left ${
-                        selectedId === customer.id
-                          ? "border-emerald-500 bg-emerald-50"
-                          : "border-gray-200 bg-white"
-                      }`}
-                    >
-                      <p className="font-bold text-gray-900">
-                        {customer.customer_name}
-                      </p>
 
-                      <p className="mt-1 text-sm text-gray-700">
-                        {customerTypeLabels[
-                          customer.customer_type
-                        ] || customer.customer_type}
-                        {" · "}
-                        {sourceLabels[customer.source] ||
-                          customer.source}
-                      </p>
+                <p className="mt-2 text-3xl font-extrabold text-gray-900">
+                  {customers.length}
+                </p>
 
-                      <p className="mt-1 text-sm text-gray-600">
-                        {customer.phone ||
-                          customer.line_id ||
-                          customer.wechat_id ||
-                          customer.whatsapp ||
-                          "暂无联系方式"}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-2xl bg-white p-5 shadow">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-gray-900">
-                  {selectedId
-                    ? "编辑客户资料"
-                    : "新增客户资料"}
-                </h2>
-
-                <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-700">
-                  {selectedId ? "编辑中" : "新客户"}
+                <span className="mt-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+                  已登记客户
                 </span>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <label className="block">
-                  <span className="font-medium text-gray-800">
-                    客户姓名
+              <div className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <p className="text-xs font-extrabold text-gray-400">
+                  VIP客户
+                </p>
+
+                <p className="mt-2 text-3xl font-extrabold text-gray-900">
+                  {customers.filter((customer) => customer.customer_type === "vip").length}
+                </p>
+
+                <span className="mt-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-700">
+                  VIP
+                </span>
+              </div>
+
+              <div className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <p className="text-xs font-extrabold text-gray-400">
+                  当前状态
+                </p>
+
+                <p className="mt-2 text-3xl font-extrabold text-gray-900">
+                  {selectedId ? "编辑中" : "新增"}
+                </p>
+
+                <span className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-extrabold text-blue-700">
+                  {selectedId ? "修改客户资料" : "添加新客户"}
+                </span>
+              </div>
+            </section>
+
+            <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+              <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-400">
+                      CUSTOMER LIST
+                    </p>
+
+                    <h2 className="mt-1 text-lg font-extrabold text-gray-900">
+                      客户列表
+                    </h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={startNewCustomer}
+                    className="rounded-2xl bg-emerald-600 px-3 py-2 text-sm font-extrabold text-white transition active:scale-95"
+                  >
+                    新增
+                  </button>
+                </div>
+
+                {customers.length === 0 ? (
+                  <p className="mt-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm font-bold text-gray-500">
+                    暂无客户，请点击“新增”。
+                  </p>
+                ) : (
+                  <div className="mt-4 max-h-[680px] space-y-3 overflow-y-auto pr-1">
+                    {customers.map((customer) => (
+                      <button
+                        key={customer.id}
+                        type="button"
+                        onClick={() => selectCustomer(customer)}
+                        className={`w-full rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
+                          selectedId === customer.id
+                            ? "border-emerald-400 bg-emerald-50 shadow-sm"
+                            : "border-gray-100 bg-white hover:border-emerald-100 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold ${
+                              selectedId === customer.id
+                                ? "bg-emerald-600 text-white"
+                                : "bg-gray-100 text-gray-500"
+                            }`}
+                          >
+                            客
+                          </span>
+
+                          <div className="min-w-0">
+                            <p className="truncate font-extrabold text-gray-900">
+                              {customer.customer_name}
+                            </p>
+
+                            <p className="mt-1 text-xs font-bold text-gray-500">
+                              {customerTypeLabels[
+                                customer.customer_type
+                              ] || customer.customer_type}
+                              {" · "}
+                              {sourceLabels[customer.source] ||
+                                customer.source}
+                            </p>
+
+                            <p className="mt-1 truncate text-xs font-bold text-gray-400">
+                              {customer.phone ||
+                                customer.line_id ||
+                                customer.wechat_id ||
+                                customer.whatsapp ||
+                                "暂无联系方式"}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-extrabold text-gray-400">
+                      EDIT CUSTOMER
+                    </p>
+
+                    <h2 className="mt-1 text-lg font-extrabold text-gray-900">
+                      {selectedId
+                        ? "编辑客户资料"
+                        : "新增客户资料"}
+                    </h2>
+                  </div>
+
+                  <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-sm font-extrabold text-emerald-700">
+                    {selectedId ? "编辑中" : "新客户"}
                   </span>
+                </div>
 
-                  <input
-                    value={form.customer_name}
-                    onChange={(event) =>
-                      updateField(
-                        "customer_name",
-                        event.target.value
-                      )
-                    }
-                    placeholder="请输入客户姓名"
-                    className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
-                  />
-                </label>
+                <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                  <label className="block lg:col-span-2">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      客户姓名
+                    </span>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                    <input
+                      value={form.customer_name}
+                      onChange={(event) =>
+                        updateField(
+                          "customer_name",
+                          event.target.value
+                        )
+                      }
+                      placeholder="请输入客户姓名"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       客户类型
                     </span>
 
@@ -357,7 +453,7 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 bg-white p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     >
                       <option value="individual">散客</option>
                       <option value="guide">导游</option>
@@ -370,7 +466,7 @@ export default function CustomersPage() {
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       来源渠道
                     </span>
 
@@ -382,7 +478,7 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 bg-white p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     >
                       <option value="line">LINE</option>
                       <option value="wechat">微信</option>
@@ -397,11 +493,9 @@ export default function CustomersPage() {
                       <option value="other">其他</option>
                     </select>
                   </label>
-                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       电话号码
                     </span>
 
@@ -413,12 +507,12 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       LINE ID
                     </span>
 
@@ -430,14 +524,12 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
-                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       微信号
                     </span>
 
@@ -449,12 +541,12 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       WhatsApp
                     </span>
 
@@ -466,14 +558,12 @@ export default function CustomersPage() {
                           event.target.value
                         )
                       }
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
-                </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       国籍
                     </span>
 
@@ -486,12 +576,12 @@ export default function CustomersPage() {
                         )
                       }
                       placeholder="例如：中国、台湾、日本"
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="font-medium text-gray-800">
+                    <span className="text-sm font-extrabold text-gray-700">
                       常用语言
                     </span>
 
@@ -504,13 +594,13 @@ export default function CustomersPage() {
                         )
                       }
                       placeholder="例如：中文、日文、英文"
-                      className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                     />
                   </label>
                 </div>
 
-                <label className="block">
-                  <span className="font-medium text-gray-800">
+                <label className="mt-4 block">
+                  <span className="text-sm font-extrabold text-gray-700">
                     备注
                   </span>
 
@@ -523,25 +613,31 @@ export default function CustomersPage() {
                       )
                     }
                     rows={4}
-                    className="mt-2 w-full rounded-xl border border-gray-300 p-3 text-gray-900"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
                   />
                 </label>
 
-                <button
-                  type="button"
-                  onClick={saveCustomer}
-                  disabled={saving}
-                  className="w-full rounded-xl bg-emerald-600 p-3 font-bold text-white disabled:opacity-50"
-                >
-                  {saving
-                    ? "正在保存……"
-                    : selectedId
-                      ? "保存客户资料"
-                      : "添加新客户"}
-                </button>
-              </div>
-            </section>
-          </div>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-bold text-gray-400">
+                    客户资料可在新增行程时关联使用。
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={saveCustomer}
+                    disabled={saving}
+                    className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                  >
+                    {saving
+                      ? "正在保存……"
+                      : selectedId
+                        ? "保存客户资料"
+                        : "添加新客户"}
+                  </button>
+                </div>
+              </section>
+            </div>
+          </>
         )}
       </div>
     </main>
