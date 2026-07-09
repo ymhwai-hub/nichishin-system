@@ -165,37 +165,46 @@ export default function DriverTripDetailPage() {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-white px-4 py-6">
-      <div className="mx-auto max-w-md">
-        <div className="mb-5 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-emerald-600">司机端</p>
-            <h1 className="text-2xl font-extrabold text-gray-900">
-              订单详情
-            </h1>
-          </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                DRIVER APP
+              </p>
 
-          <button
-            type="button"
-            onClick={() => router.push("/driver-trips")}
-            className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-gray-600 shadow-sm"
-          >
-            返回
-          </button>
-        </div>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                订单详情
+              </h1>
+
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                确认订单时间、路线、车辆、客户信息和行程状态。
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => router.push("/driver-trips")}
+              className="shrink-0 rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+            >
+              返回
+            </button>
+          </div>
+        </section>
 
         {message && (
-          <div className="mb-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
+          <div className="rounded-3xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-extrabold text-amber-700 shadow-sm">
             {message}
           </div>
         )}
 
         {loading ? (
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             正在读取订单……
           </div>
         ) : !trip ? (
-          <div className="rounded-3xl bg-white p-5 text-gray-500 shadow-sm">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             没有找到订单
           </div>
         ) : (
@@ -220,7 +229,7 @@ export default function DriverTripDetailPage() {
               </div>
 
               <div className="p-5">
-                <div className="rounded-2xl bg-gray-50 p-4">
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                   <p className="text-xs font-bold text-gray-400">
                     日期时间
                   </p>
@@ -307,7 +316,7 @@ export default function DriverTripDetailPage() {
             <button
               type="button"
               onClick={() => router.push(`/parking?tripId=${trip.id}`)}
-              className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 font-extrabold text-blue-700 shadow-sm"
+              className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 font-extrabold text-blue-700 shadow-sm transition active:scale-95"
             >
               停车登记
             </button>
@@ -317,7 +326,7 @@ export default function DriverTripDetailPage() {
                 type="button"
                 onClick={() => updateTripStatus("in_progress")}
                 disabled={updating}
-                className="w-full rounded-2xl bg-emerald-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                className="w-full rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 {updating ? "正在更新……" : "开始行程"}
               </button>
@@ -328,7 +337,7 @@ export default function DriverTripDetailPage() {
                 type="button"
                 onClick={() => updateTripStatus("completed")}
                 disabled={updating}
-                className="w-full rounded-2xl bg-blue-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                className="w-full rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 {updating ? "正在更新……" : "完成行程"}
               </button>
@@ -348,7 +357,7 @@ function InfoRow({
   value: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl bg-gray-50 px-4 py-3">
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
       <span className="shrink-0 font-bold text-gray-400">{label}</span>
       <span className="text-right font-extrabold text-gray-800">{value}</span>
     </div>
