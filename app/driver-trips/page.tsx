@@ -351,41 +351,50 @@ export default function DriverTripsPage() {
   ) as Record<string, number>;
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-5">
-      <div className="mx-auto max-w-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-emerald-600">司机端</p>
-            <h1 className="text-2xl font-bold text-gray-900">
-              我的行程
-            </h1>
-          </div>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.25em] text-emerald-600">
+                DRIVER APP
+              </p>
 
-          <a
-            href="/"
-            className="rounded-xl bg-white px-4 py-2 text-sm text-gray-700 shadow"
-          >
-            返回首页
-          </a>
-        </div>
+              <h1 className="mt-2 text-2xl font-extrabold text-gray-900">
+                我的行程
+              </h1>
+
+              <p className="mt-1 text-sm font-bold text-gray-500">
+                查看今日订单、开始行程、完成行程和确认订单详情。
+              </p>
+            </div>
+
+            <a
+              href="/"
+              className="shrink-0 rounded-2xl bg-gray-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+            >
+              返回
+            </a>
+          </div>
+        </section>
 
         {driver && (
-          <div className="mt-5 rounded-3xl bg-emerald-500 p-5 text-white shadow">
+          <section className="rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-500 p-5 text-white shadow-sm">
             <p className="text-sm opacity-80">当前司机</p>
             <p className="mt-2 text-xl font-bold">
               {driver.driver_code} · {driver.name}
             </p>
-          </div>
+          </section>
         )}
 
         {message && (
-          <div className="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-3xl border border-red-100 bg-red-50 p-4 text-sm font-extrabold text-red-700 shadow-sm">
             {message}
           </div>
         )}
 
         {/* 司机端状态筛选 */}
-        <div className="mt-5 rounded-3xl bg-white p-4 shadow">
+        <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <label className="block">
             <span className="mb-2 block text-sm font-bold text-gray-800">
               搜索行程
@@ -395,7 +404,7 @@ export default function DriverTripsPage() {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="搜索订单编号、航班号、地点、客户或车牌"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
             />
           </label>
 
@@ -463,7 +472,7 @@ export default function DriverTripsPage() {
       type="date"
       value={dateFilter}
       onChange={(event) => setDateFilter(event.target.value)}
-      className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900"
+      className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
     />
   </label>
 
@@ -475,7 +484,7 @@ export default function DriverTripsPage() {
         setDateFilter("");
         setSearchTerm("");
       }}
-      className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-3 font-bold text-gray-700"
+      className="mt-3 w-full rounded-2xl bg-gray-100 px-4 py-3 font-extrabold text-gray-700 transition active:scale-95"
     >
       清除筛选
     </button>
@@ -485,21 +494,21 @@ export default function DriverTripsPage() {
 
   
 
-          <p className="mt-2 text-sm font-medium text-gray-700">
+          <p className="mt-3 text-sm font-bold text-gray-500">
             当前显示：{filteredTrips.length} 条，共 {trips.length} 条
           </p>
-        </div>
+        </section>
 
         {loading ? (
-          <div className="mt-5 rounded-2xl bg-white p-5 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             正在读取行程……
           </div>
         ) : filteredTrips.length === 0 ? (
-          <div className="mt-5 rounded-2xl bg-white p-5 text-gray-500 shadow">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 text-sm font-bold text-gray-500 shadow-sm">
             暂时没有分配给你的行程
           </div>
         ) : (
-          <div className="mt-5 space-y-4">
+          <div className="space-y-4">
             {filteredTrips.map((trip) => {
               const statusBadgeClass =
                 trip.status === "scheduled"
@@ -566,14 +575,14 @@ export default function DriverTripsPage() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
                         <span className="font-bold text-gray-400">航班号</span>
                         <span className="font-extrabold text-gray-800">
                           {trip.flight_number || "未填写"}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
                         <span className="font-bold text-gray-400">车辆</span>
                         <span className="text-right font-extrabold text-gray-800">
                           {trip.vehicles
@@ -582,21 +591,21 @@ export default function DriverTripsPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
                         <span className="font-bold text-gray-400">车牌</span>
                         <span className="font-extrabold text-gray-800">
                           {trip.vehicles?.plate_number || "未填写"}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
                         <span className="font-bold text-gray-400">客户</span>
                         <span className="font-extrabold text-gray-800">
                           {trip.customer_name ?? "未关联客户"}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
                         <span className="font-bold text-gray-400">人数 / 行李</span>
                         <span className="font-extrabold text-gray-800">
                           {trip.passenger_count}人 · {trip.luggage_count}件
@@ -618,7 +627,7 @@ export default function DriverTripsPage() {
                       onClick={() => {
                         window.location.href = `/driver-trips/${trip.id}`;
                       }}
-                      className="mt-5 w-full rounded-2xl border border-emerald-200 bg-emerald-50 py-4 font-extrabold text-emerald-700"
+                      className="mt-5 w-full rounded-2xl border border-emerald-200 bg-emerald-50 py-4 font-extrabold text-emerald-700 transition active:scale-95"
                     >
                       查看详情
                     </button>
@@ -629,7 +638,7 @@ export default function DriverTripsPage() {
                           updateTripStatus(trip.id, "in_progress")
                         }
                         disabled={updatingTripId === trip.id}
-                        className="mt-5 w-full rounded-2xl bg-emerald-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                        className="mt-5 w-full rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                       >
                         {updatingTripId === trip.id
                           ? "正在更新……"
@@ -643,7 +652,7 @@ export default function DriverTripsPage() {
                           updateTripStatus(trip.id, "completed")
                         }
                         disabled={updatingTripId === trip.id}
-                        className="mt-5 w-full rounded-2xl bg-blue-500 py-4 font-extrabold text-white shadow-sm disabled:opacity-50"
+                        className="mt-5 w-full rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                       >
                         {updatingTripId === trip.id
                           ? "正在更新……"
