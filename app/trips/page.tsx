@@ -680,6 +680,35 @@ const { error } = await supabase.from("trips").insert({
     });
   }
 
+  function createReturnTripFrom(trip: Trip) {
+    const nextTripType =
+      trip.trip_type === "airport_pickup"
+        ? "airport_dropoff"
+        : trip.trip_type === "airport_dropoff"
+          ? "airport_pickup"
+          : trip.trip_type;
+
+    setEditingTripId(null);
+    setTripType(nextTripType);
+    setTripDate(trip.trip_date);
+    setStartTime(tripTimeInputValue(trip.start_time));
+    setEndTime(tripTimeInputValue(trip.end_time));
+    setCustomerId(trip.customer_id ?? "");
+    setDriverId(trip.driver_id ?? "");
+    setVehicleId(trip.vehicle_id ?? "");
+    setPickupLocation(trip.destination ?? "");
+    setDestination(trip.pickup_location ?? "");
+    setFlightNumber("");
+    setPassengerCount(String(trip.passenger_count ?? 1));
+    setLuggageCount(String(trip.luggage_count ?? 0));
+    setMessage(`已根据订单 ${trip.trip_number} 创建返程草稿。请确认日期、时间、航班号后再保存。`);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
   function cancelEditing() {
     setEditingTripId(null);
     clearTripForm();
@@ -1379,6 +1408,14 @@ const { error } = await supabase
                       className="mt-4 w-full rounded-2xl bg-amber-100 px-4 py-3 font-extrabold text-amber-700 transition active:scale-95"
                     >
                       复制这个订单
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => createReturnTripFrom(trip)}
+                      className="mt-3 w-full rounded-2xl bg-emerald-100 px-4 py-3 font-extrabold text-emerald-700 transition active:scale-95"
+                    >
+                      创建返程订单
                     </button>
 
                     {trip.status !== "completed" &&
