@@ -351,7 +351,7 @@ export default function DriverTripsPage() {
   ) as Record<string, number>;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-4 py-4 sm:px-5">
       <div className="mx-auto max-w-3xl space-y-4">
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -522,94 +522,109 @@ export default function DriverTripsPage() {
               return (
                 <div
                   key={trip.id}
-                  className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+                  className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm"
                 >
-                  <div className="border-b border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5">
+                  <div className="bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-500 p-5 text-white">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-bold text-gray-400">
-                          订单编号：{trip.trip_number}
+                      <div className="min-w-0">
+                        <p className="text-xs font-extrabold tracking-[0.18em] text-emerald-50">
+                          {trip.trip_number}
                         </p>
 
-                        <p className="mt-1 text-xl font-extrabold tracking-tight text-gray-900">
-                          {trip.trip_date} · {formatTime(trip.start_time)}
+                        <p className="mt-2 text-3xl font-extrabold tracking-tight">
+                          {formatTime(trip.start_time)}
+                        </p>
+
+                        <p className="mt-1 text-sm font-bold text-emerald-50">
+                          {trip.trip_date}
                           {trip.end_time
-                            ? `—${formatTime(trip.end_time)}`
+                            ? ` · 结束 ${formatTime(trip.end_time)}`
                             : ""}
-                        </p>
-
-                        <p className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700">
-                          {tripTypeText(trip.trip_type)}
                         </p>
                       </div>
 
                       <span
-                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-extrabold ${statusBadgeClass}`}
+                        className={`shrink-0 rounded-full border bg-white px-3 py-1 text-xs font-extrabold shadow-sm ${statusBadgeClass}`}
                       >
                         {statusText(trip.status)}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold">
+                        {tripTypeText(trip.trip_type)}
+                      </span>
+
+                      <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold">
+                        {trip.passenger_count}人 · {trip.luggage_count}件
                       </span>
                     </div>
                   </div>
 
                   <div className="p-5">
-                    <div className="rounded-2xl bg-gray-50 p-4">
-                      <p className="text-xs font-bold text-gray-400">
-                        出发地
-                      </p>
-                      <p className="mt-1 text-base font-extrabold text-gray-900">
-                        {trip.pickup_location || "未填写出发地点"}
-                      </p>
+                    <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4">
+                      <div className="flex gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-sm font-extrabold text-emerald-700">
+                          起
+                        </span>
 
-                      <div className="my-4 flex items-center gap-3 text-gray-300">
-                        <div className="h-px flex-1 bg-gray-200" />
-                        <span className="text-lg font-bold">→</span>
-                        <div className="h-px flex-1 bg-gray-200" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-extrabold text-gray-400">
+                            出发地
+                          </p>
+                          <p className="mt-1 break-words text-lg font-extrabold leading-7 text-gray-900">
+                            {trip.pickup_location || "未填写出发地点"}
+                          </p>
+                        </div>
                       </div>
 
-                      <p className="text-xs font-bold text-gray-400">
-                        目的地
-                      </p>
-                      <p className="mt-1 text-base font-extrabold text-gray-900">
-                        {trip.destination || "未填写目的地"}
-                      </p>
+                      <div className="ml-4 my-3 h-8 border-l-2 border-dashed border-gray-200" />
+
+                      <div className="flex gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-700">
+                          到
+                        </span>
+
+                        <div className="min-w-0">
+                          <p className="text-xs font-extrabold text-gray-400">
+                            目的地
+                          </p>
+                          <p className="mt-1 break-words text-lg font-extrabold leading-7 text-gray-900">
+                            {trip.destination || "未填写目的地"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
-                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <span className="font-bold text-gray-400">航班号</span>
-                        <span className="font-extrabold text-gray-800">
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                        <p className="text-xs font-extrabold text-gray-400">航班号</p>
+                        <p className="mt-1 truncate font-extrabold text-gray-800">
                           {trip.flight_number || "未填写"}
-                        </span>
+                        </p>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <span className="font-bold text-gray-400">车辆</span>
-                        <span className="text-right font-extrabold text-gray-800">
+                      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                        <p className="text-xs font-extrabold text-gray-400">车牌</p>
+                        <p className="mt-1 truncate font-extrabold text-gray-800">
+                          {trip.vehicles?.plate_number || "未填写"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                        <p className="text-xs font-extrabold text-gray-400">车辆</p>
+                        <p className="mt-1 truncate font-extrabold text-gray-800">
                           {trip.vehicles
                             ? `${trip.vehicles.vehicle_code} · ${trip.vehicles.model}`
                             : "未分配"}
-                        </span>
+                        </p>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <span className="font-bold text-gray-400">车牌</span>
-                        <span className="font-extrabold text-gray-800">
-                          {trip.vehicles?.plate_number || "未填写"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <span className="font-bold text-gray-400">客户</span>
-                        <span className="font-extrabold text-gray-800">
+                      <div className="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+                        <p className="text-xs font-extrabold text-gray-400">客户</p>
+                        <p className="mt-1 truncate font-extrabold text-gray-800">
                           {trip.customer_name ?? "未关联客户"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-                        <span className="font-bold text-gray-400">人数 / 行李</span>
-                        <span className="font-extrabold text-gray-800">
-                          {trip.passenger_count}人 · {trip.luggage_count}件
-                        </span>
+                        </p>
                       </div>
                     </div>
 
@@ -622,55 +637,59 @@ export default function DriverTripsPage() {
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.location.href = `/driver-trips/${trip.id}`;
-                      }}
-                      className="mt-5 w-full rounded-2xl border border-emerald-200 bg-emerald-50 py-4 font-extrabold text-emerald-700 transition active:scale-95"
-                    >
-                      查看详情
-                    </button>
-
-                    {trip.status === "scheduled" && (
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       <button
-                        onClick={() =>
-                          updateTripStatus(trip.id, "in_progress")
-                        }
-                        disabled={updatingTripId === trip.id}
-                        className="mt-5 w-full rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `/driver-trips/${trip.id}`;
+                        }}
+                        className="rounded-2xl border border-emerald-200 bg-emerald-50 py-4 font-extrabold text-emerald-700 transition active:scale-95"
                       >
-                        {updatingTripId === trip.id
-                          ? "正在更新……"
-                          : "开始行程"}
+                        查看详情
                       </button>
-                    )}
 
-                    {trip.status === "in_progress" && (
-                      <button
-                        onClick={() =>
-                          updateTripStatus(trip.id, "completed")
-                        }
-                        disabled={updatingTripId === trip.id}
-                        className="mt-5 w-full rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
-                      >
-                        {updatingTripId === trip.id
-                          ? "正在更新……"
-                          : "完成行程"}
-                      </button>
-                    )}
+                      {trip.status === "scheduled" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateTripStatus(trip.id, "in_progress")
+                          }
+                          disabled={updatingTripId === trip.id}
+                          className="rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                        >
+                          {updatingTripId === trip.id
+                            ? "正在更新……"
+                            : "开始行程"}
+                        </button>
+                      )}
 
-                    {trip.status === "completed" && (
-                      <div className="mt-5 rounded-2xl bg-emerald-50 py-4 text-center font-extrabold text-emerald-700">
-                        此行程已完成
-                      </div>
-                    )}
+                      {trip.status === "in_progress" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateTripStatus(trip.id, "completed")
+                          }
+                          disabled={updatingTripId === trip.id}
+                          className="rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
+                        >
+                          {updatingTripId === trip.id
+                            ? "正在更新……"
+                            : "完成行程"}
+                        </button>
+                      )}
 
-                    {trip.status === "cancelled" && (
-                      <div className="mt-5 rounded-2xl bg-gray-100 py-4 text-center font-extrabold text-gray-500">
-                        此行程已取消
-                      </div>
-                    )}
+                      {trip.status === "completed" && (
+                        <div className="rounded-2xl bg-emerald-50 py-4 text-center font-extrabold text-emerald-700 sm:col-span-2">
+                          此行程已完成
+                        </div>
+                      )}
+
+                      {trip.status === "cancelled" && (
+                        <div className="rounded-2xl bg-gray-100 py-4 text-center font-extrabold text-gray-500 sm:col-span-2">
+                          此行程已取消
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
