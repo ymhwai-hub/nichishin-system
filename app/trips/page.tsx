@@ -940,6 +940,128 @@ const { error } = await supabase
     }
   }
 
+  async function copyGuestConfirmText(trip: Trip) {
+    const selectedLanguage = window.prompt(
+      "请选择客人确认信息语言：\\n1：中文\\n2：台灣版\\n3：英文\\n\\n请输入 1、2 或 3",
+      "1"
+    );
+
+    if (!selectedLanguage) {
+      setMessage("已取消复制客人确认信息");
+      return;
+    }
+
+    const languageInput = selectedLanguage.trim();
+    const language =
+      languageInput === "1" || languageInput.includes("中文")
+        ? "cn"
+        : languageInput === "2" ||
+            languageInput.includes("台") ||
+            languageInput.includes("灣")
+          ? "tw"
+          : languageInput === "3" ||
+              languageInput.includes("英") ||
+              languageInput.toLowerCase().includes("en")
+            ? "en"
+            : "";
+
+    if (!language) {
+      setMessage("语言选择无效，请输入 1、2 或 3");
+      return;
+    }
+
+    const vehicleText = trip.vehicles
+      ? trip.vehicles.model
+      : language === "en"
+        ? "Vehicle to be confirmed"
+        : language === "tw"
+          ? "車輛資訊稍後確認"
+          : "车辆信息稍后确认";
+
+    const timeText = `${formatTime(trip.start_time)}${
+      trip.end_time ? `—${formatTime(trip.end_time)}` : ""
+    }`;
+
+    const tripTypeCn = tripTypeText(trip.trip_type);
+
+    const tripTypeTw =
+      tripTypeCn === "机场接机"
+        ? "機場接機"
+        : tripTypeCn === "机场送机"
+          ? "機場送機"
+          : tripTypeCn === "一日包车"
+            ? "一日包車"
+            : tripTypeCn;
+
+    const tripTypeEn =
+      trip.trip_type === "airport_pickup"
+        ? "Airport pick-up"
+        : trip.trip_type === "airport_dropoff"
+          ? "Airport drop-off"
+          : trip.trip_type === "charter"
+            ? "Private charter"
+            : "Transfer";
+
+    const guestText =
+      language === "cn"
+        ? [
+            "贵宾您好，您的行程信息如下：",
+            `日期：${trip.trip_date}`,
+            `时间：${timeText}`,
+            `行程类型：${tripTypeCn}`,
+            trip.flight_number ? `航班号：${trip.flight_number}` : "",
+            `上车地点：${trip.pickup_location || "未填写"}`,
+            `目的地：${trip.destination || "未填写"}`,
+            `车辆：${vehicleText}`,
+            `乘客：${trip.passenger_count}人`,
+            `行李：${trip.luggage_count}件`,
+            "请确认以上信息是否正确，谢谢。",
+          ].filter(Boolean).join("\n")
+        : language === "tw"
+          ? [
+              "貴賓您好，您的行程資訊如下：",
+              `日期：${trip.trip_date}`,
+              `時間：${timeText}`,
+              `行程類型：${tripTypeTw}`,
+              trip.flight_number ? `航班號：${trip.flight_number}` : "",
+              `上車地點：${trip.pickup_location || "未填寫"}`,
+              `目的地：${trip.destination || "未填寫"}`,
+              `車輛：${vehicleText}`,
+              `乘客：${trip.passenger_count}人`,
+              `行李：${trip.luggage_count}件`,
+              "請確認以上資訊是否正確，謝謝。",
+            ].filter(Boolean).join("\n")
+          : [
+              "Dear guest, please kindly confirm the following trip details:",
+              `Date: ${trip.trip_date}`,
+              `Time: ${timeText}`,
+              `Trip type: ${tripTypeEn}`,
+              trip.flight_number ? `Flight number: ${trip.flight_number}` : "",
+              `Pick-up location: ${trip.pickup_location || "Not provided"}`,
+              `Destination: ${trip.destination || "Not provided"}`,
+              `Vehicle: ${vehicleText}`,
+              `Passengers: ${trip.passenger_count}`,
+              `Luggage: ${trip.luggage_count}`,
+              "Please confirm whether the above information is correct. Thank you.",
+            ].filter(Boolean).join("\n");
+
+    const languageLabel =
+      language === "cn"
+        ? "中文"
+        : language === "tw"
+          ? "台灣版"
+          : "英文";
+
+    try {
+      await navigator.clipboard.writeText(guestText);
+      setMessage(`已复制客人确认信息（${languageLabel}）：${trip.trip_number}`);
+    } catch {
+      window.prompt("请手动复制以下客人确认信息", guestText);
+      setMessage("浏览器无法自动复制，请在弹窗中手动复制客人确认信息。");
+    }
+  }
+
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
       <div className="mx-auto max-w-7xl space-y-4">
@@ -1451,6 +1573,14 @@ const { error } = await supabase
                       className="mt-4 w-full rounded-2xl bg-purple-100 px-4 py-3 font-extrabold text-purple-700 transition active:scale-95"
                     >
                       复制派单文字
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => copyGuestConfirmText(trip)}
+                      className="mt-3 w-full rounded-2xl bg-cyan-100 px-4 py-3 font-extrabold text-cyan-700 transition active:scale-95"
+                    >
+                      复制客人确认信息
                     </button>
 
                     <button
