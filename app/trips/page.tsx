@@ -821,7 +821,7 @@ const { error } = await supabase
 
   async function cancelTrip(tripId: string) {
     const confirmed = window.confirm(
-      "确定取消这个行程吗？取消后记录仍会保留。"
+      "确定取消原订单吗？取消后记录仍会保留。"
     );
 
     if (!confirmed) return;
@@ -895,6 +895,49 @@ const { error } = await supabase
       hour12: false,
       timeZone: "Asia/Tokyo",
     });
+  }
+
+  async function copyDispatchText(trip: Trip) {
+    const customerName =
+      customers.find((customer) => customer.id === trip.customer_id)
+        ?.customer_name ||
+      trip.customers?.customer_name ||
+      "未关联客户";
+
+    const driverText = trip.drivers
+      ? `${trip.drivers.driver_code} · ${trip.drivers.name}`
+      : "未分配";
+
+    const vehicleText = trip.vehicles
+      ? `${trip.vehicles.vehicle_code} · ${trip.vehicles.model}`
+      : "未分配";
+
+    const timeText = `${formatTime(trip.start_time)}${
+      trip.end_time ? `—${formatTime(trip.end_time)}` : ""
+    }`;
+
+    const dispatchText = [
+      "【日辰派单】",
+      `订单号：${trip.trip_number}`,
+      `日期：${trip.trip_date}`,
+      `时间：${timeText}`,
+      `类型：${tripTypeText(trip.trip_type)}`,
+      `航班号：${trip.flight_number || "未填写"}`,
+      `客户：${customerName}`,
+      `司机：${driverText}`,
+      `车辆：${vehicleText}`,
+      `路线：${trip.pickup_location || "未填写出发地"} → ${trip.destination || "未填写目的地"}`,
+      `乘客：${trip.passenger_count}人`,
+      `行李：${trip.luggage_count}件`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(dispatchText);
+      setMessage(`已复制派单文字：${trip.trip_number}`);
+    } catch {
+      window.prompt("请手动复制以下派单文字", dispatchText);
+      setMessage("浏览器无法自动复制，请在弹窗中手动复制派单文字。");
+    }
   }
 
   return (
@@ -1404,10 +1447,18 @@ const { error } = await supabase
 
                     <button
                       type="button"
-                      onClick={() => copyTripToForm(trip)}
-                      className="mt-4 w-full rounded-2xl bg-amber-100 px-4 py-3 font-extrabold text-amber-700 transition active:scale-95"
+                      onClick={() => copyDispatchText(trip)}
+                      className="mt-4 w-full rounded-2xl bg-purple-100 px-4 py-3 font-extrabold text-purple-700 transition active:scale-95"
                     >
-                      复制这个订单
+                      复制派单文字
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => copyTripToForm(trip)}
+                      className="mt-3 w-full rounded-2xl bg-amber-100 px-4 py-3 font-extrabold text-amber-700 transition active:scale-95"
+                    >
+                      复制为新订单
                     </button>
 
                     <button
@@ -1415,7 +1466,7 @@ const { error } = await supabase
                       onClick={() => createReturnTripFrom(trip)}
                       className="mt-3 w-full rounded-2xl bg-emerald-100 px-4 py-3 font-extrabold text-emerald-700 transition active:scale-95"
                     >
-                      创建返程订单
+                      创建返程新订单
                     </button>
 
                     {trip.status !== "completed" &&
@@ -1425,7 +1476,7 @@ const { error } = await supabase
                           onClick={() => startEditTrip(trip)}
                           className="mt-4 w-full rounded-2xl bg-blue-100 px-4 py-3 font-extrabold text-blue-700 transition active:scale-95"
                         >
-                          编辑这个行程
+                          修改原订单
                         </button>
                       )}
 
@@ -1440,7 +1491,7 @@ const { error } = await supabase
                         >
                           {updatingTripId === trip.id
                             ? "正在取消..."
-                            : "取消这个行程"}
+                            : "取消原订单"}
                         </button>
                       )}
 
