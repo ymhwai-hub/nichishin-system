@@ -101,7 +101,7 @@ export default function Home() {
         setRole(saved.role);
         setUsername(
           saved.username ||
-            (saved.role === "admin" ? "admin" : "D001")
+            (saved.role === "admin" ? "admin" : saved.username || "D001")
         );
         setLoggedIn(true);
         setView("home");
@@ -179,10 +179,26 @@ export default function Home() {
   }
 
   async function loadDriverTripCount() {
+    let currentDriverCode = "D001";
+
+    try {
+      const savedLoginText = window.localStorage.getItem("nichishin_login");
+      const savedLogin = savedLoginText ? JSON.parse(savedLoginText) : {};
+
+      if (
+        savedLogin.role === "driver" &&
+        typeof savedLogin.username === "string"
+      ) {
+        currentDriverCode = savedLogin.username.trim().toUpperCase();
+      }
+    } catch {
+      currentDriverCode = "D001";
+    }
+
     const { data: driverData, error: driverError } = await supabase
       .from("drivers")
       .select("id")
-      .eq("driver_code", "D001")
+      .eq("driver_code", currentDriverCode)
       .single();
 
     if (driverError || !driverData) {
@@ -773,18 +789,22 @@ export default function Home() {
       return;
     }
 
-    if (username === "D001" && password === "123456") {
+    const normalizedUsername = username.trim().toUpperCase();
+
+    if (/^D\d{3,}$/.test(normalizedUsername) && password === "123456") {
       setRole("driver");
       setLoggedIn(true);
       setView("home");
       setLoginError("");
+
       window.localStorage.setItem(
         "nichishin_login",
         JSON.stringify({
           role: "driver",
-          username: "D001",
+          username: normalizedUsername,
         })
       );
+
       return;
     }
 
@@ -854,7 +874,7 @@ export default function Home() {
 
           <div className="mt-6 rounded-xl bg-gray-50 p-3 text-xs text-gray-500">
             <p>管理员：admin / 123456</p>
-            <p className="mt-1">司机：D001 / 123456</p>
+            <p className="mt-1">司机：D001、D002、D003... / 123456</p>
           </div>
 
           <p className="mt-8 text-center text-xs text-gray-400">
@@ -897,7 +917,7 @@ export default function Home() {
               <p className="mt-2 text-sm">
                 {role === "admin"
                   ? "admin · 日辰株式会社"
-                  : "D001 · CAR001"}
+                  : `${username || "D001"} · 司机端`}
               </p>
             </div>
 
