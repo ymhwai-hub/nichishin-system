@@ -151,6 +151,184 @@ export default function DriverTripDetailPage() {
     setUpdating(false);
   }
 
+  async function copyDriverGuestMessage() {
+    if (!trip) return;
+
+    const selectedLanguage = window.prompt(
+      "请选择司机联系客人信息语言：\\n1：中文\\n2：台灣版\\n3：英文\\n\\n请输入 1、2 或 3",
+      "1"
+    );
+
+    if (!selectedLanguage) {
+      setMessage("已取消复制联系客人信息");
+      return;
+    }
+
+    const languageInput = selectedLanguage.trim();
+
+    const language =
+      languageInput === "1" || languageInput.includes("中文")
+        ? "cn"
+        : languageInput === "2" ||
+            languageInput.includes("台") ||
+            languageInput.includes("灣")
+          ? "tw"
+          : languageInput === "3" ||
+              languageInput.includes("英") ||
+              languageInput.toLowerCase().includes("en")
+            ? "en"
+            : "";
+
+    if (!language) {
+      setMessage("语言选择无效，请输入 1、2 或 3");
+      return;
+    }
+
+    let driverSurname = "";
+
+    try {
+      const savedLoginText = window.localStorage.getItem("nichishin_login");
+      const savedLogin = savedLoginText ? JSON.parse(savedLoginText) : {};
+      const currentTrip = trip as any;
+      const tripDriverId = currentTrip.driver_id || "";
+      const driverCode =
+        typeof savedLogin.username === "string" ? savedLogin.username : "";
+
+      let driverName = "";
+
+      if (tripDriverId) {
+        const { data: driverData } = await supabase
+          .from("drivers")
+          .select("name")
+          .eq("id", tripDriverId)
+          .maybeSingle();
+
+        driverName =
+          typeof driverData?.name === "string"
+            ? driverData.name.trim()
+            : "";
+      }
+
+      if (!driverName && driverCode) {
+        const { data: driverData } = await supabase
+          .from("drivers")
+          .select("name")
+          .eq("driver_code", driverCode)
+          .maybeSingle();
+
+        driverName =
+          typeof driverData?.name === "string"
+            ? driverData.name.trim()
+            : "";
+      }
+
+      driverSurname = driverName ? driverName.slice(0, 1) : "";
+    } catch {
+      driverSurname = "";
+    }
+
+    const driverTextCn = driverSurname
+      ? `司机${driverSurname}`
+      : "司机";
+
+    const driverTextTw = driverSurname
+      ? `司機${driverSurname}`
+      : "司機";
+
+    const vehicleText = vehicle
+      ? text(vehicle["model"])
+      : language === "en"
+        ? "Vehicle to be confirmed"
+        : language === "tw"
+          ? "車輛資訊稍後確認"
+          : "车辆信息稍后确认";
+
+    const startTimeText = formatTime(trip.start_time);
+
+    const englishPlaceText = (
+      value: string | null | undefined,
+      fallback: string
+    ) => {
+      const rawText = text(value, fallback).trim();
+
+      const dictionary: Record<string, string> = {
+        "中部国际机场 T1": "Chubu Centrair International Airport Terminal 1",
+        "中部國際機場 T1": "Chubu Centrair International Airport Terminal 1",
+        "中部国际机场T1": "Chubu Centrair International Airport Terminal 1",
+        "中部國際機場T1": "Chubu Centrair International Airport Terminal 1",
+        "中部国际机场 T2": "Chubu Centrair International Airport Terminal 2",
+        "中部國際機場 T2": "Chubu Centrair International Airport Terminal 2",
+        "中部国际机场T2": "Chubu Centrair International Airport Terminal 2",
+        "中部國際機場T2": "Chubu Centrair International Airport Terminal 2",
+        "中部国际机场": "Chubu Centrair International Airport",
+        "中部國際機場": "Chubu Centrair International Airport",
+        "名古屋万豪酒店": "Nagoya Marriott Associa Hotel",
+        "名古屋萬豪酒店": "Nagoya Marriott Associa Hotel",
+      };
+
+      if (dictionary[rawText]) {
+        return dictionary[rawText];
+      }
+
+      return rawText
+        .replaceAll("中部国际机场", "Chubu Centrair International Airport")
+        .replaceAll("中部國際機場", "Chubu Centrair International Airport")
+        .replaceAll("名古屋万豪酒店", "Nagoya Marriott Associa Hotel")
+        .replaceAll("名古屋萬豪酒店", "Nagoya Marriott Associa Hotel")
+        .replaceAll("名古屋", "Nagoya")
+        .replaceAll("酒店", "Hotel")
+        .replaceAll("飯店", "Hotel")
+        .replaceAll("机场", "Airport")
+        .replaceAll("機場", "Airport");
+    };
+
+    const messageText =
+      language === "cn"
+        ? [
+            `贵宾您好，我是本次行程${driverTextCn}。`,
+            `我将于 ${text(trip.trip_date)} ${startTimeText} 在 ${text(trip.pickup_location, "约定地点")} 等候您。`,
+            trip.flight_number ? `航班号：${trip.flight_number}` : "",
+            `目的地：${text(trip.destination, "未填写")}`,
+            `车辆：${vehicleText}`,
+            "我会提前到达，请确认以上信息是否正确，谢谢。",
+            "期待您的回复。",
+          ].filter(Boolean).join("\n")
+        : language === "tw"
+          ? [
+              `貴賓您好，我是本次行程${driverTextTw}。`,
+              `我將於 ${text(trip.trip_date)} ${startTimeText} 在 ${text(trip.pickup_location, "約定地點")} 等候您。`,
+              trip.flight_number ? `航班號：${trip.flight_number}` : "",
+              `目的地：${text(trip.destination, "未填寫")}`,
+              `車輛：${vehicleText}`,
+              "我會提前抵達，請確認以上資訊是否正確，謝謝。",
+              "期待您的回覆。",
+            ].filter(Boolean).join("\n")
+          : [
+              "Dear guest, this is your driver for the trip.",
+              `I will be waiting for you at ${englishPlaceText(trip.pickup_location, "the agreed pick-up location")} on ${text(trip.trip_date)} at ${startTimeText}.`,
+              trip.flight_number ? `Flight number: ${trip.flight_number}` : "",
+              `Destination: ${englishPlaceText(trip.destination, "Not provided")}`,
+              `Vehicle: ${vehicleText}`,
+              "I will arrive early. Please confirm whether the above information is correct. Thank you.",
+              "I look forward to your reply.",
+            ].filter(Boolean).join("\n");
+
+    const languageLabel =
+      language === "cn"
+        ? "中文"
+        : language === "tw"
+          ? "台灣版"
+          : "英文";
+
+    try {
+      await navigator.clipboard.writeText(messageText);
+      setMessage(`已复制联系客人信息（${languageLabel}）`);
+    } catch {
+      window.prompt("请手动复制以下联系客人信息", messageText);
+      setMessage("浏览器无法自动复制，请在弹窗中手动复制联系客人信息。");
+    }
+  }
+
   useEffect(() => {
     if (tripId) {
       loadTrip();
@@ -312,6 +490,14 @@ export default function DriverTripDetailPage() {
                 <InfoRow label="备注" value={text(customer?.["notes"])} />
               </div>
             </section>
+
+            <button
+              type="button"
+              onClick={copyDriverGuestMessage}
+              className="w-full rounded-2xl border border-lime-200 bg-lime-50 py-4 font-extrabold text-lime-700 shadow-sm transition active:scale-95"
+            >
+              复制联系客人信息
+            </button>
 
             <button
               type="button"
