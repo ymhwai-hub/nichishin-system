@@ -116,6 +116,7 @@ export default function Home() {
   const [tripCount, setTripCount] = useState(0);
   const [driverTripCount, setDriverTripCount] = useState(0);
   const [currentVehicleText, setCurrentVehicleText] = useState("未分配");
+  const [driverCashText, setDriverCashText] = useState("¥0");
   const [parkingCount, setParkingCount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
@@ -291,6 +292,82 @@ export default function Home() {
       [vehicleCode, plateNumber || model].filter(Boolean).join(" · ") ||
         "未分配"
     );
+  }
+
+  async function loadCurrentDriverCashTotal() {
+    let currentDriverCode = "D001";
+
+    try {
+      const savedLoginText = window.localStorage.getItem("nichishin_login");
+      const savedLogin = savedLoginText ? JSON.parse(savedLoginText) : {};
+
+      if (
+        savedLogin.role === "driver" &&
+        typeof savedLogin.username === "string"
+      ) {
+        currentDriverCode = savedLogin.username.trim().toUpperCase();
+      }
+    } catch {
+      currentDriverCode = "D001";
+    }
+
+    const { data: driverData, error: driverError } = await supabase
+      .from("drivers")
+      .select("id")
+      .eq("driver_code", currentDriverCode)
+      .single();
+
+    if (driverError || !driverData) {
+      setDriverCashText("¥0");
+      return;
+    }
+
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Tokyo",
+    });
+
+    const { data: cashData, error: cashError } = await supabase
+      .from("expenses")
+      .select("amount, currency")
+      .eq("driver_id", driverData.id)
+      .eq("expense_type", "cash_collection")
+      .eq("expense_date", today);
+
+    if (cashError) {
+      setDriverCashText("¥0");
+      return;
+    }
+
+    const rows =
+      (cashData as unknown as {
+        amount: number | string | null;
+        currency: string | null;
+      }[]) ?? [];
+
+    let jpyTotal = 0;
+    let cnyTotal = 0;
+
+    rows.forEach((row) => {
+      const amountNumber = Number(row.amount) || 0;
+
+      if (row.currency === "CNY") {
+        cnyTotal += amountNumber;
+      } else {
+        jpyTotal += amountNumber;
+      }
+    });
+
+    const parts = [];
+
+    if (jpyTotal > 0) {
+      parts.push(`¥${jpyTotal.toLocaleString()}`);
+    }
+
+    if (cnyTotal > 0) {
+      parts.push(`¥${cnyTotal.toLocaleString()} 人民币`);
+    }
+
+    setDriverCashText(parts.length > 0 ? parts.join(" / ") : "¥0");
   }
 
   async function loadParkingCount() {
@@ -830,6 +907,7 @@ export default function Home() {
       loadTripCount(),
       loadDriverTripCount(),
       loadCurrentDriverVehicle(),
+      loadCurrentDriverCashTotal(),
       loadParkingCount(),
       loadCashCount(),
       loadReminderCount(),
@@ -1038,7 +1116,7 @@ export default function Home() {
 
                 <MenuCard
                   title="代收现金"
-                  value="¥0"
+                  value={driverCashText}
                   onClick={() => (window.location.href = "/cash-collection")}
                 />
               </div>

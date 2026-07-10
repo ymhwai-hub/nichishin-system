@@ -91,10 +91,23 @@ export default function CashCollectionPage() {
     async function initialize() {
       setLoading(true);
 
+      const savedLoginText = window.localStorage.getItem("nichishin_login");
+      const savedLogin = savedLoginText ? JSON.parse(savedLoginText) : {};
+      const currentDriverCode =
+        typeof savedLogin.username === "string"
+          ? savedLogin.username.trim().toUpperCase()
+          : "";
+
+      if (!currentDriverCode) {
+        setMessage("没有读取到当前司机账号，请重新登录");
+        setLoading(false);
+        return;
+      }
+
       const { data: driverData, error: driverError } = await supabase
         .from("drivers")
         .select("id, driver_code, name")
-        .eq("driver_code", "D001")
+        .eq("driver_code", currentDriverCode)
         .single();
 
       if (driverError || !driverData) {
