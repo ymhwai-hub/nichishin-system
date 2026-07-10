@@ -67,6 +67,20 @@ function getDateFilterFromUrl() {
   return params.get("date") ?? "";
 }
 
+
+function tokyoDateKey(offsetDays = 0) {
+  const date = new Date();
+
+  date.setDate(date.getDate() + offsetDays);
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 export default function TripsPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -1141,7 +1155,51 @@ const { error } = await supabase
               </select>
             </label>
 
-                        <label className="mt-3 block">
+                        <div className="mt-3">
+              <span className="mb-1 block text-sm font-extrabold text-gray-700">
+                快速日期
+              </span>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDateFilter("")}
+                  className={`rounded-2xl px-3 py-3 text-sm font-extrabold transition active:scale-95 ${
+                    !dateFilter
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  全部
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDateFilter(tokyoDateKey(0))}
+                  className={`rounded-2xl px-3 py-3 text-sm font-extrabold transition active:scale-95 ${
+                    dateFilter === tokyoDateKey(0)
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  今日
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDateFilter(tokyoDateKey(1))}
+                  className={`rounded-2xl px-3 py-3 text-sm font-extrabold transition active:scale-95 ${
+                    dateFilter === tokyoDateKey(1)
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  明日
+                </button>
+              </div>
+            </div>
+
+            <label className="mt-3 block">
               <span className="mb-1 block text-sm font-extrabold text-gray-700">
                 行程日期
               </span>
