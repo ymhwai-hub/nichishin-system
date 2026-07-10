@@ -245,6 +245,80 @@ export default function DriverTripDetailPage() {
 
     const startTimeText = formatTime(trip.start_time);
 
+    const tokyoDateKey = (offsetDays = 0) => {
+      const date = new Date();
+
+      date.setDate(date.getDate() + offsetDays);
+
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(date);
+    };
+
+    const naturalDateCn = () => {
+      if (trip.trip_date === tokyoDateKey(0)) {
+        return `今天 ${startTimeText}`;
+      }
+
+      if (trip.trip_date === tokyoDateKey(1)) {
+        return `明天 ${startTimeText}`;
+      }
+
+      const [year, month, day] = text(trip.trip_date).split("-");
+
+      if (year && month && day) {
+        return `${Number(year)}年${Number(month)}月${Number(day)}日 ${startTimeText}`;
+      }
+
+      return `${text(trip.trip_date)} ${startTimeText}`;
+    };
+
+    const naturalDateTw = () => {
+      if (trip.trip_date === tokyoDateKey(0)) {
+        return `今天 ${startTimeText}`;
+      }
+
+      if (trip.trip_date === tokyoDateKey(1)) {
+        return `明天 ${startTimeText}`;
+      }
+
+      const [year, month, day] = text(trip.trip_date).split("-");
+
+      if (year && month && day) {
+        return `${Number(year)}年${Number(month)}月${Number(day)}日 ${startTimeText}`;
+      }
+
+      return `${text(trip.trip_date)} ${startTimeText}`;
+    };
+
+    const naturalDateEn = () => {
+      if (trip.trip_date === tokyoDateKey(0)) {
+        return `today at ${startTimeText}`;
+      }
+
+      if (trip.trip_date === tokyoDateKey(1)) {
+        return `tomorrow at ${startTimeText}`;
+      }
+
+      const date = new Date(`${text(trip.trip_date)}T00:00:00+09:00`);
+
+      if (!Number.isNaN(date.getTime())) {
+        const dateText = date.toLocaleDateString("en-US", {
+          timeZone: "Asia/Tokyo",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        return `on ${dateText} at ${startTimeText}`;
+      }
+
+      return `on ${text(trip.trip_date)} at ${startTimeText}`;
+    };
+
     const englishPlaceText = (
       value: string | null | undefined,
       fallback: string
@@ -286,7 +360,7 @@ export default function DriverTripDetailPage() {
       language === "cn"
         ? [
             `贵宾您好，我是本次行程${driverTextCn}。`,
-            `我将于 ${text(trip.trip_date)} ${startTimeText} 在 ${text(trip.pickup_location, "约定地点")} 等候您。`,
+            `我将于 ${naturalDateCn()} 在 ${text(trip.pickup_location, "约定地点")} 等候您。`,
             trip.flight_number ? `航班号：${trip.flight_number}` : "",
             `目的地：${text(trip.destination, "未填写")}`,
             `车辆：${vehicleText}`,
@@ -296,7 +370,7 @@ export default function DriverTripDetailPage() {
         : language === "tw"
           ? [
               `貴賓您好，我是本次行程${driverTextTw}。`,
-              `我將於 ${text(trip.trip_date)} ${startTimeText} 在 ${text(trip.pickup_location, "約定地點")} 等候您。`,
+              `我將於 ${naturalDateTw()} 在 ${text(trip.pickup_location, "約定地點")} 等候您。`,
               trip.flight_number ? `航班號：${trip.flight_number}` : "",
               `目的地：${text(trip.destination, "未填寫")}`,
               `車輛：${vehicleText}`,
@@ -305,7 +379,7 @@ export default function DriverTripDetailPage() {
             ].filter(Boolean).join("\n")
           : [
               "Dear guest, this is your driver for the trip.",
-              `I will be waiting for you at ${englishPlaceText(trip.pickup_location, "the agreed pick-up location")} on ${text(trip.trip_date)} at ${startTimeText}.`,
+              `I will be waiting for you at ${englishPlaceText(trip.pickup_location, "the agreed pick-up location")} ${naturalDateEn()}.`,
               trip.flight_number ? `Flight number: ${trip.flight_number}` : "",
               `Destination: ${englishPlaceText(trip.destination, "Not provided")}`,
               `Vehicle: ${vehicleText}`,
