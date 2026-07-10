@@ -608,6 +608,14 @@ const { error } = await supabase.from("trips").insert({
     setLuggageCount("0");
   }
 
+  function swapRouteLocations() {
+    const currentPickupLocation = pickupLocation;
+
+    setPickupLocation(destination);
+    setDestination(currentPickupLocation);
+    setMessage("已交换出发地和目的地，请确认行程类型、日期和时间后再保存。");
+  }
+
   function tripTimeInputValue(value: string | null) {
     if (!value) return "";
 
@@ -1067,6 +1075,20 @@ const { error } = await supabase
                 placeholder="例如：名古屋万豪酒店"
                 className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <button
+                type="button"
+                onClick={swapRouteLocations}
+                className="w-full rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 font-extrabold text-amber-700 transition active:scale-95"
+              >
+                交换出发地和目的地
+              </button>
+
+              <p className="mt-2 text-xs font-bold text-gray-400">
+                适合复制返程订单，例如：机场 → 酒店，交换后变成酒店 → 机场。
+              </p>
             </div>
 
             <div>
