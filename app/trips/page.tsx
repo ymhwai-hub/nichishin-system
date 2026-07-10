@@ -608,25 +608,26 @@ const { error } = await supabase.from("trips").insert({
     setLuggageCount("0");
   }
 
-  function startEditTrip(trip: Trip) {
-    const editTime = new Date(trip.start_time || "").toLocaleTimeString(
-      "en-GB",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Tokyo",
-      }
-    );
+  function tripTimeInputValue(value: string | null) {
+    if (!value) return "";
 
-    const editEndTime = trip.end_time
-      ? new Date(trip.end_time).toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Tokyo",
-        })
-      : "";
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value.slice(0, 5);
+    }
+
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Tokyo",
+    });
+  }
+
+  function startEditTrip(trip: Trip) {
+    const editTime = tripTimeInputValue(trip.start_time);
+    const editEndTime = tripTimeInputValue(trip.end_time);
 
     setEditingTripId(trip.id);
     setTripType(trip.trip_type);
@@ -642,6 +643,28 @@ const { error } = await supabase.from("trips").insert({
     setPassengerCount(String(trip.passenger_count ?? 1));
     setLuggageCount(String(trip.luggage_count ?? 0));
     setMessage(`正在编辑订单：${trip.trip_number}`);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function copyTripToForm(trip: Trip) {
+    setEditingTripId(null);
+    setTripType(trip.trip_type);
+    setTripDate(trip.trip_date);
+    setStartTime(tripTimeInputValue(trip.start_time));
+    setEndTime(tripTimeInputValue(trip.end_time));
+    setCustomerId(trip.customer_id ?? "");
+    setDriverId(trip.driver_id ?? "");
+    setVehicleId(trip.vehicle_id ?? "");
+    setPickupLocation(trip.pickup_location ?? "");
+    setDestination(trip.destination ?? "");
+    setFlightNumber(trip.flight_number ?? "");
+    setPassengerCount(String(trip.passenger_count ?? 1));
+    setLuggageCount(String(trip.luggage_count ?? 0));
+    setMessage(`已复制订单：${trip.trip_number}。请确认日期和时间后再保存为新订单。`);
 
     window.scrollTo({
       top: 0,
@@ -700,6 +723,7 @@ const { error } = await supabase.from("trips").insert({
     const scheduleConflict =
       await getScheduleConflictMessage(
         startDateTime,
+        endDateTime,
         editingTripId
       );
 
@@ -1326,6 +1350,14 @@ const { error } = await supabase
                       </button>
                     )}
 
+
+                    <button
+                      type="button"
+                      onClick={() => copyTripToForm(trip)}
+                      className="mt-4 w-full rounded-2xl bg-amber-100 px-4 py-3 font-extrabold text-amber-700 transition active:scale-95"
+                    >
+                      复制这个订单
+                    </button>
 
                     {trip.status !== "completed" &&
                       trip.status !== "cancelled" && (
