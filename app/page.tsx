@@ -115,6 +115,7 @@ export default function Home() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [tripCount, setTripCount] = useState(0);
   const [driverTripCount, setDriverTripCount] = useState(0);
+  const [currentVehicleText, setCurrentVehicleText] = useState("未分配");
   const [parkingCount, setParkingCount] = useState(0);
   const [cashCount, setCashCount] = useState(0);
   const [reminderCount, setReminderCount] = useState(0);
@@ -217,6 +218,79 @@ export default function Home() {
     }
 
     setDriverTripCount(count ?? 0);
+  }
+
+  async function loadCurrentDriverVehicle() {
+    let currentDriverCode = "D001";
+
+    try {
+      const savedLoginText = window.localStorage.getItem("nichishin_login");
+      const savedLogin = savedLoginText ? JSON.parse(savedLoginText) : {};
+
+      if (
+        savedLogin.role === "driver" &&
+        typeof savedLogin.username === "string"
+      ) {
+        currentDriverCode = savedLogin.username.trim().toUpperCase();
+      }
+    } catch {
+      currentDriverCode = "D001";
+    }
+
+    const { data: driverData, error: driverError } = await supabase
+      .from("drivers")
+      .select("id")
+      .eq("driver_code", currentDriverCode)
+      .single();
+
+    if (driverError || !driverData) {
+      setCurrentVehicleText("未分配");
+      return;
+    }
+
+    const { data: tripData, error: tripError } = await supabase
+      .from("trips")
+      .select("vehicle_id")
+      .eq("driver_id", driverData.id)
+      .in("status", ["scheduled", "in_progress"])
+      .order("trip_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (tripError || !tripData?.vehicle_id) {
+      setCurrentVehicleText("未分配");
+      return;
+    }
+
+    const { data: vehicleData, error: vehicleError } = await supabase
+      .from("vehicles")
+      .select("vehicle_code, model, plate_number")
+      .eq("id", tripData.vehicle_id)
+      .maybeSingle();
+
+    if (vehicleError || !vehicleData) {
+      setCurrentVehicleText("未分配");
+      return;
+    }
+
+    const vehicleCode =
+      typeof vehicleData.vehicle_code === "string"
+        ? vehicleData.vehicle_code
+        : "";
+
+    const plateNumber =
+      typeof vehicleData.plate_number === "string"
+        ? vehicleData.plate_number
+        : "";
+
+    const model =
+      typeof vehicleData.model === "string" ? vehicleData.model : "";
+
+    setCurrentVehicleText(
+      [vehicleCode, plateNumber || model].filter(Boolean).join(" · ") ||
+        "未分配"
+    );
   }
 
   async function loadParkingCount() {
@@ -755,6 +829,7 @@ export default function Home() {
       loadVehicles(),
       loadTripCount(),
       loadDriverTripCount(),
+      loadCurrentDriverVehicle(),
       loadParkingCount(),
       loadCashCount(),
       loadReminderCount(),
@@ -951,8 +1026,8 @@ export default function Home() {
 
                 <MenuCard
                   title="当前车辆"
-                  value={vehicles[0]?.vehicle_code ?? "未分配"}
-                  onClick={() => (window.location.href = "/vehicles")}
+                  value={currentVehicleText}
+                  onClick={() => (window.location.href = "/driver-trips")}
                 />
 
                 <MenuCard
