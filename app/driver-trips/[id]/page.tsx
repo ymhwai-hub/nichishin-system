@@ -417,7 +417,7 @@ export default function DriverTripDetailPage() {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-5 py-4">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-white px-4 py-4 sm:px-5">
       <div className="mx-auto max-w-3xl space-y-4">
         <section className="rounded-3xl border border-gray-100 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
@@ -461,52 +461,79 @@ export default function DriverTripDetailPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            <section className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white">
-                <p className="text-sm font-bold text-emerald-50">
-                  订单编号
-                </p>
-                <p className="mt-1 text-2xl font-extrabold">
-                  {text(trip.trip_number)}
-                </p>
+            <section className="overflow-hidden rounded-[2rem] border border-emerald-100 bg-white shadow-sm">
+              <div className="bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-500 p-5 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-extrabold tracking-[0.2em] text-emerald-50">
+                      ORDER DETAIL
+                    </p>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-bold">
-                    {tripTypeText(trip.trip_type)}
-                  </span>
-                  <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-emerald-700">
+                    <p className="mt-2 text-2xl font-extrabold">
+                      {text(trip.trip_number)}
+                    </p>
+                  </div>
+
+                  <span className="shrink-0 rounded-full bg-white px-3 py-1 text-sm font-extrabold text-emerald-700 shadow-sm">
                     {statusText(trip.status)}
                   </span>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-white/15 p-3">
+                    <p className="text-xs font-bold text-emerald-50">日期</p>
+                    <p className="mt-1 text-lg font-extrabold">
+                      {text(trip.trip_date)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/15 p-3">
+                    <p className="text-xs font-bold text-emerald-50">时间</p>
+                    <p className="mt-1 text-lg font-extrabold">
+                      {formatTime(trip.start_time)}
+                      {trip.end_time ? `—${formatTime(trip.end_time)}` : ""}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 inline-flex rounded-full bg-white/20 px-3 py-1 text-sm font-extrabold">
+                  {tripTypeText(trip.trip_type)}
                 </div>
               </div>
 
               <div className="p-5">
-                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                  <p className="text-xs font-bold text-gray-400">
-                    日期时间
-                  </p>
-                  <p className="mt-1 text-xl font-extrabold text-gray-900">
-                    {text(trip.trip_date)} · {formatTime(trip.start_time)}
-                    {trip.end_time ? `—${formatTime(trip.end_time)}` : ""}
-                  </p>
-                </div>
+                <div className="rounded-3xl border border-gray-100 bg-gray-50 p-4">
+                  <div className="flex gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-sm font-extrabold text-emerald-700">
+                      起
+                    </span>
 
-                <div className="mt-4 rounded-2xl bg-gray-50 p-4">
-                  <p className="text-xs font-bold text-gray-400">出发地</p>
-                  <p className="mt-1 font-extrabold text-gray-900">
-                    {text(trip.pickup_location, "未填写出发地点")}
-                  </p>
-
-                  <div className="my-4 flex items-center gap-3 text-gray-300">
-                    <div className="h-px flex-1 bg-gray-200" />
-                    <span className="font-bold">→</span>
-                    <div className="h-px flex-1 bg-gray-200" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-gray-400">
+                        出发地
+                      </p>
+                      <p className="mt-1 break-words text-lg font-extrabold leading-7 text-gray-900">
+                        {text(trip.pickup_location, "未填写出发地点")}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="text-xs font-bold text-gray-400">目的地</p>
-                  <p className="mt-1 font-extrabold text-gray-900">
-                    {text(trip.destination, "未填写目的地")}
-                  </p>
+                  <div className="ml-4 my-3 h-8 border-l-2 border-dashed border-gray-200" />
+
+                  <div className="flex gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-700">
+                      到
+                    </span>
+
+                    <div className="min-w-0">
+                      <p className="text-xs font-extrabold text-gray-400">
+                        目的地
+                      </p>
+                      <p className="mt-1 break-words text-lg font-extrabold leading-7 text-gray-900">
+                        {text(trip.destination, "未填写目的地")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -565,43 +592,62 @@ export default function DriverTripDetailPage() {
               </div>
             </section>
 
-            <button
-              type="button"
-              onClick={copyDriverGuestMessage}
-              className="w-full rounded-2xl border border-lime-200 bg-lime-50 py-4 font-extrabold text-lime-700 shadow-sm transition active:scale-95"
-            >
-              复制联系客人信息
-            </button>
+            <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-extrabold text-gray-900">
+                    司机操作
+                  </h2>
+                  <p className="mt-1 text-sm font-bold text-gray-500">
+                    联系客人、登记停车、更新行程状态
+                  </p>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => router.push(`/parking?tripId=${trip.id}`)}
-              className="w-full rounded-2xl border border-blue-200 bg-blue-50 py-4 font-extrabold text-blue-700 shadow-sm transition active:scale-95"
-            >
-              停车登记
-            </button>
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-700">
+                  ACTION
+                </span>
+              </div>
 
-            {trip.status === "scheduled" && (
-              <button
-                type="button"
-                onClick={() => updateTripStatus("in_progress")}
-                disabled={updating}
-                className="w-full rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
-              >
-                {updating ? "正在更新……" : "开始行程"}
-              </button>
-            )}
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={copyDriverGuestMessage}
+                  className="rounded-2xl border border-lime-200 bg-lime-50 py-4 font-extrabold text-lime-700 shadow-sm transition active:scale-95"
+                >
+                  复制联系客人信息
+                </button>
 
-            {trip.status === "in_progress" && (
-              <button
-                type="button"
-                onClick={() => updateTripStatus("completed")}
-                disabled={updating}
-                className="w-full rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
-              >
-                {updating ? "正在更新……" : "完成行程"}
-              </button>
-            )}
+                <button
+                  type="button"
+                  onClick={() => router.push(`/parking?tripId=${trip.id}`)}
+                  className="rounded-2xl border border-blue-200 bg-blue-50 py-4 font-extrabold text-blue-700 shadow-sm transition active:scale-95"
+                >
+                  停车登记
+                </button>
+
+                {trip.status === "scheduled" && (
+                  <button
+                    type="button"
+                    onClick={() => updateTripStatus("in_progress")}
+                    disabled={updating}
+                    className="rounded-2xl bg-emerald-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50 sm:col-span-2"
+                  >
+                    {updating ? "正在更新……" : "开始行程"}
+                  </button>
+                )}
+
+                {trip.status === "in_progress" && (
+                  <button
+                    type="button"
+                    onClick={() => updateTripStatus("completed")}
+                    disabled={updating}
+                    className="rounded-2xl bg-blue-600 py-4 font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50 sm:col-span-2"
+                  >
+                    {updating ? "正在更新……" : "完成行程"}
+                  </button>
+                )}
+              </div>
+            </section>
           </div>
         )}
       </div>
@@ -617,9 +663,9 @@ function InfoRow({
   value: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
-      <span className="shrink-0 font-bold text-gray-400">{label}</span>
-      <span className="text-right font-extrabold text-gray-800">{value}</span>
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3.5">
+      <span className="shrink-0 text-sm font-extrabold text-gray-400">{label}</span>
+      <span className="text-right text-sm font-extrabold leading-6 text-gray-800">{value}</span>
     </div>
   );
 }
