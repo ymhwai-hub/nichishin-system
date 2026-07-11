@@ -51,3 +51,13 @@ app/page-backup.tsx
 app/page-before-*.tsx
 app/driver-trips/page-before-*.tsx
 app/test-supabase/
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
