@@ -958,6 +958,11 @@ export default function Home() {
         })
       );
 
+      window.localStorage.setItem(
+        "nichishin_driver_code",
+        normalizedUsername
+      );
+
       return;
     }
 
@@ -966,6 +971,7 @@ export default function Home() {
 
   function logout() {
     window.localStorage.removeItem("nichishin_login");
+    window.localStorage.removeItem("nichishin_driver_code");
     setLoggedIn(false);
     setUsername("");
     setPassword("");
