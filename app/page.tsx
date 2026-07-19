@@ -1726,73 +1726,49 @@ function AdminDashboard({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-extrabold text-gray-900">
-                快速操作
+                今日待办
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                常用管理入口，一键进入处理
+                管理员今天需要优先确认的事项
               </p>
             </div>
 
-            <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-extrabold text-gray-500">
-              OPERATIONS
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-600">
+              TODO
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <QuickAction
-              title="新建行程"
-              description="创建订单并派车"
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <TodoCard
+              title="待执行订单"
+              value={todayOperationStats.scheduled}
+              description="今天还没开始的行程"
               href="/trips"
-              tone="emerald"
-            />
-
-            <QuickAction
-              title="添加司机"
-              description="登记司机资料"
-              href="/drivers"
               tone="blue"
             />
 
-            <QuickAction
-              title="添加车辆"
-              description="登记车辆资料"
-              href="/vehicles"
-              tone="amber"
+            <TodoCard
+              title="进行中订单"
+              value={todayOperationStats.in_progress}
+              description="正在服务中的行程"
+              href="/trips"
+              tone="orange"
             />
 
-            <QuickAction
-              title="停车记录"
-              description="查看司机 GPS"
+            <TodoCard
+              title="今日停车记录"
+              value={parkingCount}
+              description="司机上传的停车/GPS记录"
               href="/admin-parking"
               tone="teal"
             />
 
-            <QuickAction
-              title="费用审核"
-              description="查看代收现金"
-              href="/admin-cash"
-              tone="rose"
-            />
-
-            <QuickAction
-              title="客户管理"
-              description="管理客户资料"
-              href="/customers"
-              tone="purple"
-            />
-
-            <QuickAction
-              title="提醒管理"
-              description="查看到期提醒"
+            <TodoCard
+              title="待处理提醒"
+              value={reminderCount}
+              description="驾照、体检、车检、保养到期提醒"
               href="/reminders"
-              tone="orange"
-            />
-
-            <QuickAction
-              title="刷新数据"
-              description="重新读取后台"
-              onClick={() => window.location.reload()}
-              tone="gray"
+              tone="rose"
             />
           </div>
         </section>
@@ -2602,6 +2578,49 @@ function DashboardRow({
         {value}
       </span>
     </button>
+  );
+}
+
+function TodoCard({
+  title,
+  value,
+  description,
+  href,
+  tone,
+}: {
+  title: string;
+  value: number;
+  description: string;
+  href: string;
+  tone: "blue" | "orange" | "teal" | "rose";
+}) {
+  const toneClass =
+    tone === "blue"
+      ? "border-blue-100 bg-blue-50 text-blue-700"
+      : tone === "orange"
+        ? "border-orange-100 bg-orange-50 text-orange-700"
+        : tone === "teal"
+          ? "border-teal-100 bg-teal-50 text-teal-700"
+          : "border-rose-100 bg-rose-50 text-rose-700";
+
+  return (
+    <a
+      href={href}
+      className={`block rounded-3xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.99] ${toneClass}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-extrabold">{title}</p>
+          <p className="mt-1 text-xs font-bold opacity-70">
+            {description}
+          </p>
+        </div>
+
+        <span className="rounded-2xl bg-white/80 px-3 py-2 text-2xl font-extrabold text-gray-900 shadow-sm">
+          {value}
+        </span>
+      </div>
+    </a>
   );
 }
 
