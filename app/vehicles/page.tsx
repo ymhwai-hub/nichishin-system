@@ -21,6 +21,7 @@ type Vehicle = {
 };
 
 type VehicleForm = {
+  vehicle_code: string;
   plate_number: string;
   model: string;
   color: string;
@@ -35,6 +36,7 @@ type VehicleForm = {
 };
 
 const emptyForm: VehicleForm = {
+  vehicle_code: "",
   plate_number: "",
   model: "",
   color: "",
@@ -51,6 +53,7 @@ const emptyForm: VehicleForm = {
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState<VehicleForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -62,8 +65,10 @@ export default function VehiclesPage() {
 
   function selectVehicle(vehicle: Vehicle) {
     setSelectedId(vehicle.id);
+    setIsCreating(false);
 
     setForm({
+      vehicle_code: vehicle.vehicle_code || "",
       plate_number: vehicle.plate_number || "",
       model: vehicle.model || "",
       color: vehicle.color || "",
@@ -126,9 +131,35 @@ export default function VehiclesPage() {
 
     if (target) {
       selectVehicle(target);
+    } else {
+      setSelectedId("");
+      setIsCreating(false);
+      setForm(emptyForm);
     }
 
     setLoading(false);
+  }
+
+  function nextVehicleCode() {
+    const maxNumber = vehicles.reduce((max, vehicle) => {
+      const match = vehicle.vehicle_code.match(/^CAR(\d+)$/i);
+      const number = match ? Number(match[1]) : 0;
+
+      return Number.isNaN(number) ? max : Math.max(max, number);
+    }, 0);
+
+    return `CAR${String(maxNumber + 1).padStart(3, "0")}`;
+  }
+
+  function beginCreateVehicle() {
+    setSelectedId("");
+    setIsCreating(true);
+    setForm({
+      ...emptyForm,
+      vehicle_code: nextVehicleCode(),
+      fuel_type: "汽油",
+    });
+    setMessage("正在添加新车辆，请填写资料后保存");
   }
 
   function updateField(
@@ -142,8 +173,20 @@ export default function VehiclesPage() {
   }
 
   async function saveVehicle() {
-    if (!selectedId) {
+    if (!isCreating && !selectedId) {
       setMessage("请先选择车辆");
+      return;
+    }
+
+    const vehicleCode = form.vehicle_code.trim().toUpperCase();
+
+    if (!vehicleCode) {
+      setMessage("车辆编号不能为空，例如 CAR003");
+      return;
+    }
+
+    if (!/^CAR\d{3,}$/.test(vehicleCode)) {
+      setMessage("车辆编号格式不正确，请使用 CAR003、CAR004 这种格式");
       return;
     }
 
@@ -172,27 +215,51 @@ export default function VehiclesPage() {
     setSaving(true);
     setMessage("");
 
+    const payload = {
+      vehicle_code: vehicleCode,
+      plate_number: form.plate_number.trim(),
+      model: form.model.trim(),
+      color: form.color.trim() || null,
+      current_mileage: mileage,
+      insurance_expiry_date:
+        form.insurance_expiry_date || null,
+      inspection_expiry_date:
+        form.inspection_expiry_date || null,
+      etc_card_number:
+        form.etc_card_number.trim() || null,
+      fuel_type: form.fuel_type.trim() || null,
+      last_maintenance_date:
+        form.last_maintenance_date || null,
+      next_maintenance_date:
+        form.next_maintenance_date || null,
+      notes: form.notes.trim() || null,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isCreating) {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .insert(payload)
+        .select("id")
+        .single();
+
+      if (error) {
+        setMessage(`添加失败：${error.message}`);
+        setSaving(false);
+        return;
+      }
+
+      setSaving(false);
+      setIsCreating(false);
+      await loadVehicles(data.id);
+      setMessage("新车辆已成功添加");
+      return;
+    }
+
     const { error } = await supabase
       .from("vehicles")
-      .update({
-        plate_number: form.plate_number.trim(),
-        model: form.model.trim(),
-        color: form.color.trim() || null,
-        current_mileage: mileage,
-        insurance_expiry_date:
-          form.insurance_expiry_date || null,
-        inspection_expiry_date:
-          form.inspection_expiry_date || null,
-        etc_card_number:
-          form.etc_card_number.trim() || null,
-        fuel_type: form.fuel_type.trim() || null,
-        last_maintenance_date:
-          form.last_maintenance_date || null,
-        next_maintenance_date:
-          form.next_maintenance_date || null,
-        notes: form.notes.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
       .eq("id", selectedId);
 
     if (error) {
@@ -228,6 +295,14 @@ export default function VehiclesPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={beginCreateVehicle}
+                className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+              >
+                添加车辆
+              </button>
+
               <button
                 type="button"
                 onClick={() => loadVehicles(selectedId)}
@@ -381,16 +456,34 @@ export default function VehiclesPage() {
                       EDIT VEHICLE
                     </p>
                     <h2 className="mt-1 text-lg font-extrabold text-gray-900">
-                      编辑车辆资料
+                      {isCreating ? "添加车辆资料" : "编辑车辆资料"}
                     </h2>
                   </div>
 
                   <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-sm font-extrabold text-emerald-700">
-                    {selectedVehicle?.vehicle_code || "未选择"}
+                    {isCreating ? form.vehicle_code || "新车辆" : selectedVehicle?.vehicle_code || "未选择"}
                   </span>
                 </div>
 
                 <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      车辆编号
+                    </span>
+
+                    <input
+                      value={form.vehicle_code}
+                      onChange={(event) =>
+                        updateField(
+                          "vehicle_code",
+                          event.target.value.toUpperCase()
+                        )
+                      }
+                      placeholder="例如 CAR003"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
                   <label className="block">
                     <span className="text-sm font-extrabold text-gray-700">
                       车牌号码
@@ -594,12 +687,14 @@ export default function VehiclesPage() {
                   <button
                     type="button"
                     onClick={saveVehicle}
-                    disabled={saving || !selectedId}
+                    disabled={saving || (!isCreating && !selectedId)}
                     className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                   >
                     {saving
                       ? "正在保存……"
-                      : "保存车辆资料"}
+                      : isCreating
+                        ? "添加车辆"
+                        : "保存车辆资料"}
                   </button>
                 </div>
               </section>
@@ -608,4 +703,5 @@ export default function VehiclesPage() {
         )}
       </div>
     </main>
-  );}
+  );
+}
