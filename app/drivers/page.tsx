@@ -19,6 +19,7 @@ type Driver = {
 };
 
 type DriverForm = {
+  driver_code: string;
   name: string;
   phone: string;
   line_id: string;
@@ -30,6 +31,7 @@ type DriverForm = {
 };
 
 const emptyForm: DriverForm = {
+  driver_code: "",
   name: "",
   phone: "",
   line_id: "",
@@ -43,6 +45,7 @@ const emptyForm: DriverForm = {
 export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedId, setSelectedId] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const [form, setForm] = useState<DriverForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,7 +57,9 @@ export default function DriversPage() {
 
   function selectDriver(driver: Driver) {
     setSelectedId(driver.id);
+    setIsCreating(false);
     setForm({
+      driver_code: driver.driver_code || "",
       name: driver.name || "",
       phone: driver.phone || "",
       line_id: driver.line_id || "",
@@ -103,9 +108,34 @@ export default function DriversPage() {
 
     if (target) {
       selectDriver(target);
+    } else {
+      setSelectedId("");
+      setIsCreating(false);
+      setForm(emptyForm);
     }
 
     setLoading(false);
+  }
+
+  function nextDriverCode() {
+    const maxNumber = drivers.reduce((max, driver) => {
+      const match = driver.driver_code.match(/^D(\d+)$/i);
+      const number = match ? Number(match[1]) : 0;
+
+      return Number.isNaN(number) ? max : Math.max(max, number);
+    }, 0);
+
+    return `D${String(maxNumber + 1).padStart(3, "0")}`;
+  }
+
+  function beginCreateDriver() {
+    setSelectedId("");
+    setIsCreating(true);
+    setForm({
+      ...emptyForm,
+      driver_code: nextDriverCode(),
+    });
+    setMessage("正在添加新司机，请填写资料后保存");
   }
 
   function updateField(field: keyof DriverForm, value: string) {
@@ -116,8 +146,20 @@ export default function DriversPage() {
   }
 
   async function saveDriver() {
-    if (!selectedId) {
+    if (!isCreating && !selectedId) {
       setMessage("请先选择司机");
+      return;
+    }
+
+    const driverCode = form.driver_code.trim().toUpperCase();
+
+    if (!driverCode) {
+      setMessage("司机编号不能为空，例如 D003");
+      return;
+    }
+
+    if (!/^D\d{3,}$/.test(driverCode)) {
+      setMessage("司机编号格式不正确，请使用 D003、D004 这种格式");
       return;
     }
 
@@ -129,20 +171,44 @@ export default function DriversPage() {
     setSaving(true);
     setMessage("");
 
+    const payload = {
+      driver_code: driverCode,
+      name: form.name.trim(),
+      phone: form.phone.trim() || null,
+      line_id: form.line_id.trim() || null,
+      license_number: form.license_number.trim() || null,
+      license_expiry_date: form.license_expiry_date || null,
+      medical_check_date: form.medical_check_date || null,
+      next_medical_check_date:
+        form.next_medical_check_date || null,
+      notes: form.notes.trim() || null,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isCreating) {
+      const { data, error } = await supabase
+        .from("drivers")
+        .insert(payload)
+        .select("id")
+        .single();
+
+      if (error) {
+        setMessage(`添加失败：${error.message}`);
+        setSaving(false);
+        return;
+      }
+
+      setSaving(false);
+      setIsCreating(false);
+      await loadDrivers(data.id);
+      setMessage("新司机已成功添加");
+      return;
+    }
+
     const { error } = await supabase
       .from("drivers")
-      .update({
-        name: form.name.trim(),
-        phone: form.phone.trim() || null,
-        line_id: form.line_id.trim() || null,
-        license_number: form.license_number.trim() || null,
-        license_expiry_date: form.license_expiry_date || null,
-        medical_check_date: form.medical_check_date || null,
-        next_medical_check_date:
-          form.next_medical_check_date || null,
-        notes: form.notes.trim() || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
       .eq("id", selectedId);
 
     if (error) {
@@ -178,6 +244,14 @@ export default function DriversPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={beginCreateDriver}
+                className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition active:scale-95"
+              >
+                添加司机
+              </button>
+
               <button
                 type="button"
                 onClick={() => loadDrivers(selectedId)}
@@ -324,16 +398,30 @@ export default function DriversPage() {
                       EDIT DRIVER
                     </p>
                     <h2 className="mt-1 text-lg font-extrabold text-gray-900">
-                      编辑司机资料
+                      {isCreating ? "添加司机资料" : "编辑司机资料"}
                     </h2>
                   </div>
 
                   <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-sm font-extrabold text-emerald-700">
-                    {selectedDriver?.driver_code || "未选择"}
+                    {isCreating ? form.driver_code || "新司机" : selectedDriver?.driver_code || "未选择"}
                   </span>
                 </div>
 
                 <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-extrabold text-gray-700">
+                      司机编号
+                    </span>
+                    <input
+                      value={form.driver_code}
+                      onChange={(event) =>
+                        updateField("driver_code", event.target.value.toUpperCase())
+                      }
+                      placeholder="例如 D003"
+                      className="mt-2 w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-gray-900 outline-none transition focus:border-emerald-400 focus:bg-white"
+                    />
+                  </label>
+
                   <label className="block">
                     <span className="text-sm font-extrabold text-gray-700">
                       姓名
@@ -465,10 +553,10 @@ export default function DriversPage() {
                   <button
                     type="button"
                     onClick={saveDriver}
-                    disabled={saving || !selectedId}
+                    disabled={saving || (!isCreating && !selectedId)}
                     className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-95 disabled:opacity-50"
                   >
-                    {saving ? "正在保存……" : "保存司机资料"}
+                    {saving ? "正在保存……" : isCreating ? "添加司机" : "保存司机资料"}
                   </button>
                 </div>
               </section>
